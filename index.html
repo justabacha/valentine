@@ -13,7 +13,8 @@
             --code-yellow: #ffcc00;
             --code-green: #39ff14;
             --code-red: #ff3131;
-            --code-pink: #ff00ff;
+            --code-purple: #bd93f9;
+            --code-pink: #ff79c6;
         }
 
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: -apple-system, sans-serif; overflow: hidden; }
@@ -44,13 +45,14 @@
         /* Phase 2: Professional Terminal */
         #terminal-page {
             display: none; background-color: var(--terminal-bg); height: 100vh; width: 100vw;
-            padding: 30px; box-sizing: border-box; font-family: 'Fira Code', monospace; font-size: 0.9rem; overflow-y: auto;
+            padding: 30px; box-sizing: border-box; font-family: 'Fira Code', monospace; font-size: 0.85rem; overflow-y: auto;
         }
-        .line { margin-bottom: 10px; display: block; line-height: 1.5; }
+        .line { margin-bottom: 8px; display: block; line-height: 1.5; white-space: pre-wrap; }
         .sys-tag { color: var(--code-red); font-weight: bold; }
         .blue { color: var(--code-blue); }
         .yellow { color: var(--code-yellow); }
         .green { color: var(--code-green); }
+        .purple { color: var(--code-purple); }
         .pink { color: var(--code-pink); }
 
         /* Phase 3: iPhone Chat */
@@ -128,17 +130,18 @@
             document.getElementById('terminal-page').style.display = 'block';
             
             const script = [
-                {t: "[system] unauthorized access detected...", c: "red", wait: 800},
+                {t: "[system] unauthorized access detected...", c: "blue", wait: 800},
                 {t: "[system] bypassing 'NO' button protocol", c: "blue", wait: 1200},
                 {t: "      » success", c: "green", wait: 500},
-                {t: "[system] initializing 'valentine_2026'...", c: "yellow", wait: 1500},
-                {t: "      » date linked '14th' February", c: "green", wait: 600},
-                {t: "[system] scanning heartbeat...", c: "blue", wait: 2000},
+                {t: "[system] initializing 'valentine_2026'...", c: "blue", wait: 1200},
+                {t: "      » date linked '14'th February", c: "green", wait: 600},
+                {t: "[system] scanning heartbeat...", c: "blue", wait: 1800},
                 {t: "      » match found", c: "green", wait: 400},
                 {t: "      » soulmate confirmed", c: "green", wait: 800},
-                {t: "[system] analyzing compatibility... 100%", c: "yellow", wait: 1500},
-                {t: "[system] override 'success'", c: "red", wait: 1000},
-                {t: "      » 'YES' i'll be ur valentine...", c: "green", wait: 1200},
+                {t: "[system] analyzing compatibility... 100%", c: "blue", wait: 1200},
+                {t: "[system] override 'success'", c: "blue", wait: 800},
+                {t: "      » login successful", c: "green", wait: 600},
+                {t: "      » 'YES' i'll be ur valentine...", c: "green", wait: 1000},
                 {t: "Phestone: sending private message...", c: "pink", wait: 500}
             ];
 
@@ -147,16 +150,20 @@
                 const span = document.createElement('span');
                 span.className = `line`;
                 
-                // Special handling for [system] brackets color
+                // Process the text to highlight numbers and quotes
+                let processedText = line.t
+                    .replace(/'([^']*)'/g, '<span class="yellow">\'$1\'</span>') // Highlights 'quoted words' in Yellow
+                    .replace(/(\d+)/g, '<span class="purple">$1</span>');       // Highlights digits in Purple
+
                 if (line.t.startsWith("[system]")) {
-                    span.innerHTML = `<span class="sys-tag">[system]</span> <span class="${line.c}">${line.t.replace('[system]', '')}</span>`;
+                    span.innerHTML = `<span class="sys-tag">[system]</span> <span class="${line.c}">${processedText.replace('[system]', '')}</span>`;
                 } else {
                     span.className += ` ${line.c}`;
-                    span.innerHTML = line.t;
+                    span.innerHTML = processedText;
                 }
                 
                 container.appendChild(span);
-                await typeEffect(span, line.t, line.t.startsWith("[system]"));
+                await typeEffect(span, line.t, line.t.startsWith("[system]"), processedText);
                 await new Promise(r => setTimeout(r, line.wait));
             }
 
@@ -166,28 +173,55 @@
             }, 1000);
         }
 
-        function typeEffect(el, text, hasTag) {
+        function typeEffect(el, rawText, hasTag, processedText) {
             return new Promise(resolve => {
+                const target = hasTag ? el.querySelector('span:last-child') : el;
+                const finalHTML = hasTag ? processedText.replace('[system]', '') : processedText;
+                
+                // We need to type character by character but keep HTML tags intact
                 let i = 0;
-                let fullText = text;
-                // If it has a tag, we only want to type the part AFTER the tag
-                if(hasTag) {
-                   const cleanText = text.replace('[system]', '');
-                   const textSpan = el.querySelector('span:last-child');
-                   textSpan.innerHTML = "";
-                   const interval = setInterval(() => {
-                        textSpan.innerHTML += cleanText.charAt(i);
-                        i++;
-                        if (i >= cleanText.length) { clearInterval(interval); resolve(); }
-                    }, 40);
-                } else {
-                    el.innerHTML = "";
-                    const interval = setInterval(() => {
-                        el.innerHTML += fullText.charAt(i);
-                        i++;
-                        if (i >= fullText.length) { clearInterval(interval); resolve(); }
-                    }, 40);
+                target.innerHTML = "";
+                
+                // This is a simple way to type out string that contains HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = finalHTML;
+                const nodes = Array.from(tempDiv.childNodes);
+                
+                let nodeIdx = 0;
+                function typeNode() {
+                    if (nodeIdx >= nodes.length) { resolve(); return; }
+                    let node = nodes[nodeIdx];
+                    
+                    if (node.nodeType === 3) { // Text node
+                        let charIdx = 0;
+                        let text = node.textContent;
+                        let interval = setInterval(() => {
+                            target.innerHTML += text.charAt(charIdx);
+                            charIdx++;
+                            if (charIdx >= text.length) {
+                                clearInterval(interval);
+                                nodeIdx++;
+                                typeNode();
+                            }
+                        }, 40);
+                    } else { // HTML node (span)
+                        let newSpan = document.createElement('span');
+                        newSpan.className = node.className;
+                        target.appendChild(newSpan);
+                        let charIdx = 0;
+                        let text = node.textContent;
+                        let interval = setInterval(() => {
+                            newSpan.innerHTML += text.charAt(charIdx);
+                            charIdx++;
+                            if (charIdx >= text.length) {
+                                clearInterval(interval);
+                                nodeIdx++;
+                                typeNode();
+                            }
+                        }, 40);
+                    }
                 }
+                typeNode();
             });
         }
 
@@ -197,5 +231,5 @@
         }
     </script>
 </body>
-    </html>
-    
+            </html>
+            
