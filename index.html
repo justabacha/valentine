@@ -8,185 +8,74 @@
     <style>
         :root {
             --ios-blue: #007AFF;
-            --system-red: #ff3b30;
-            --terminal-pink: #ff4d6d;
+            --terminal-bg: #1e1e1e;
+            --code-blue: #4fc1ff;
+            --code-yellow: #dcdcaa;
+            --code-green: #6a9955;
+            --code-red: #f44747;
+            --code-pink: #c586c0;
         }
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            overflow: hidden;
-        }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: -apple-system, sans-serif; overflow: hidden; }
+        #music-box { position: absolute; left: -9999px; }
 
-        /* Hidden Music Box */
-        #music-box {
-            position: absolute;
-            top: -500px;
-            left: -500px;
-            visibility: hidden;
-        }
-
-        /* Phase 1: Landing Page */
+        /* Phase 1: Landing */
         #landing-page {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;
             background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.2)), 
                         url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            text-align: center;
+            background-size: cover; background-position: center; text-align: center;
         }
 
-        h1 {
-            font-family: 'Great Vibes', cursive;
-            color: #800f2f;
-            font-size: 3rem;
-            margin-bottom: 40px;
-            padding: 0 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
+        h1 { font-family: 'Great Vibes', cursive; color: #800f2f; font-size: 3rem; margin-bottom: 40px; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
+        .btn-container { position: relative; width: 100%; max-width: 400px; height: 250px; }
 
-        .btn-container {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            height: 250px;
-        }
+        #yes-wrapper { position: absolute; left: 15%; top: 10%; cursor: pointer; display: flex; justify-content: center; align-items: center; animation: heartbeat 1.2s infinite; z-index: 100; }
+        .heart-svg { width: 140px; height: 140px; filter: drop-shadow(0 0 10px rgba(255, 77, 109, 0.6)); }
+        .yes-label { position: absolute; color: white; font-weight: bold; font-size: 1.3rem; pointer-events: none; }
 
-        /* Heart Shape YES Button */
-        #yes-wrapper {
-            position: absolute;
-            left: 20%;
-            top: 20%;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            animation: heartbeat 1.2s infinite;
-        }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
-        .heart-svg {
-            width: 130px;
-            height: 130px;
-            filter: drop-shadow(0 0 10px rgba(255, 77, 109, 0.6));
-        }
-
-        .yes-label {
-            position: absolute;
-            color: white;
-            font-weight: bold;
-            font-size: 1.3rem;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        @keyframes heartbeat {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        /* Moving No Button */
         #no-btn {
-            background-color: rgba(255, 255, 255, 0.9);
-            color: #333;
-            padding: 12px 25px;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            position: absolute;
-            right: 15%;
-            top: 40%;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            white-space: nowrap;
+            background: rgba(255, 255, 255, 0.9); color: #333; padding: 12px 25px; border-radius: 30px; border: none;
+            font-weight: 600; cursor: pointer; position: absolute; right: 15%; top: 40%; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        /* Phase 2: Terminal */
+        /* Phase 2: Professional Terminal */
         #terminal-page {
-            display: none;
-            background-color: #0d0208;
-            height: 100vh;
-            width: 100vw;
-            padding: 40px;
-            box-sizing: border-box;
-            font-family: 'Fira Code', monospace;
-            overflow: hidden;
+            display: none; background-color: var(--terminal-bg); height: 100vh; width: 100vw;
+            padding: 25px; box-sizing: border-box; font-family: 'Fira Code', monospace; font-size: 0.85rem; overflow-y: auto;
         }
-        .sys-red { color: var(--system-red); margin: 5px 0; }
-        .txt-pink { color: var(--terminal-pink); margin: 5px 0; }
+        .line { margin-bottom: 8px; display: block; }
+        .blue { color: var(--code-blue); }
+        .yellow { color: var(--code-yellow); }
+        .green { color: var(--code-green); }
+        .red { color: var(--code-red); }
+        .pink { color: var(--code-pink); }
+        .indent { margin-left: 20px; }
 
         /* Phase 3: iPhone Chat */
-        #chat-page {
-            display: none;
-            height: 100vh;
-            width: 100vw;
-            background: url('https://i.postimg.cc/c1wsd5p6/IMG-6683.jpg') no-repeat center center;
-            background-size: cover;
-            position: relative;
-        }
-
-        .chat-header {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(15px);
-            padding: 45px 20px 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border-bottom: 0.5px solid #ccc;
-        }
-
+        #chat-page { display: none; height: 100vh; width: 100vw; background: url('https://i.postimg.cc/c1wsd5p6/IMG-6683.jpg') no-repeat center center; background-size: cover; position: relative; }
+        .chat-header { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(15px); padding: 45px 20px 10px; display: flex; flex-direction: column; align-items: center; border-bottom: 0.5px solid #ccc; }
         .header-img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
         .header-name { font-weight: 600; font-size: 0.9rem; margin-top: 5px; }
-
         .bubble-wrapper { position: relative; max-width: 80%; margin: 30px 20px; }
-        .imessage-bubble {
-            background-color: #e9e9eb;
-            color: black;
-            padding: 15px;
-            border-radius: 20px;
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-
-        .my-photo-floating {
-            width: 40px; height: 40px; border-radius: 50%;
-            position: absolute; bottom: -15px; right: -15px;
-            border: 2px solid white; object-fit: cover;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        .input-bar {
-            position: fixed; bottom: 0; width: 100%;
-            background: rgba(255,255,255,0.9);
-            padding: 10px 15px 30px; display: flex; gap: 10px; box-sizing: border-box;
-            align-items: center;
-        }
+        .imessage-bubble { background-color: #e9e9eb; padding: 15px; border-radius: 20px; font-size: 0.95rem; line-height: 1.4; }
+        .my-photo-floating { width: 40px; height: 40px; border-radius: 50%; position: absolute; bottom: -15px; right: -15px; border: 2px solid white; object-fit: cover; }
+        .input-bar { position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.9); padding: 10px 15px 30px; display: flex; gap: 10px; box-sizing: border-box; align-items: center; }
         .text-input { flex: 1; border: 1px solid #ccc; padding: 10px 15px; border-radius: 25px; outline: none; }
-        .send-btn-ios { background: var(--ios-blue); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .send-btn-ios { background: var(--ios-blue); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-    <div id="music-box">
-        <div id="player"></div>
-    </div>
+    <div id="music-box"><div id="player"></div></div>
 
     <div id="landing-page">
         <h1>Will you be my valentine? 😍</h1>
         <div class="btn-container">
             <div id="yes-wrapper" onclick="startTerminal()">
-                <svg viewBox="0 0 32 32" class="heart-svg">
-                    <path fill="#ff4d6d" d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14,0.454c0.841-10.853,14-9.81,14-0.454 C30,20.335,16,28.261,16,28.261z"/>
-                </svg>
+                <svg viewBox="0 0 32 32" class="heart-svg"><path fill="#ff4d6d" d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14,0.454c0.841-10.853,14-9.81,14-0.454 C30,20.335,16,28.261,16,28.261z"/></svg>
                 <span class="yes-label">YES</span>
             </div>
             <button id="no-btn" onclick="moveNoButton()">No</button>
@@ -222,75 +111,66 @@
         let emojiIdx = 0;
 
         function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                height: '0',
-                width: '0',
-                videoId: 'uyNVv6Q8CxY',
-                playerVars: { 'autoplay': 0, 'controls': 0, 'start': 5 },
-                events: { 'onReady': onPlayerReady }
-            });
-        }
-
-        function onPlayerReady(event) {
-            // Ready to play when clicked
+            player = new YT.Player('player', { height: '0', width: '0', videoId: 'uyNVv6Q8CxY', playerVars: { 'autoplay': 0, 'start': 5 } });
         }
 
         function moveNoButton() {
             const btn = document.getElementById('no-btn');
             btn.innerHTML = `No ${emojis[emojiIdx]}`;
             emojiIdx = (emojiIdx + 1) % emojis.length;
-            
             const x = Math.random() * (window.innerWidth - 120);
             const y = Math.random() * (window.innerHeight - 150);
-            btn.style.position = 'fixed';
-            btn.style.left = x + 'px';
-            btn.style.top = y + 'px';
+            btn.style.position = 'fixed'; btn.style.left = x + 'px'; btn.style.top = y + 'px';
         }
 
         async function startTerminal() {
-            // Start the music on the interaction
-            if (player && player.playVideo) {
-                player.playVideo();
-            }
-            
+            if (player && player.playVideo) player.playVideo();
             document.getElementById('landing-page').style.display = 'none';
             document.getElementById('terminal-page').style.display = 'block';
             
-            const lines = [
-                {t: "[SYSTEM]: Unauthorized access detected...", c: "sys-red"},
-                {t: "[SYSTEM]: Bypassing 'No' button protocols...", c: "sys-red"},
-                {t: "[SYSTEM]: Initializing 'Valentine_2026'...", c: "sys-red"},
-                {t: "[SYSTEM]: Analyzing compatibility... 100%", c: "sys-red"},
-                {t: "Phestone: Sending private message...", c: "txt-pink"}
+            const script = [
+                {t: "system unauthorized access detected...", c: "red"},
+                {t: "system bypassing 'NO' button protocol", c: "blue"},
+                {t: "      » success", c: "green"},
+                {t: "system initializing 'valentine_2026'...", c: "yellow"},
+                {t: "      » date linked '14th' February", c: "green"},
+                {t: "system scanning heartbeat...", c: "blue"},
+                {t: "      » match found", c: "green"},
+                {t: "      » soulmate confirmed", c: "green"},
+                {t: "system analyzing compatibility... 100%", c: "yellow"},
+                {t: "system override 'success'", c: "red"},
+                {t: "      » 'YES' i'll be ur valentine...", c: "green"},
+                {t: "Phestone: sending private message...", c: "pink"}
             ];
 
             const container = document.getElementById('terminal-content');
-            for (let line of lines) {
-                const p = document.createElement('p');
-                p.className = line.c;
-                container.appendChild(p);
-                await typeEffect(p, line.t);
-                await new Promise(r => setTimeout(r, 1000));
+            for (let line of script) {
+                const span = document.createElement('span');
+                span.className = `line ${line.c}`;
+                container.appendChild(span);
+                await typeEffect(span, line.t);
+                await new Promise(r => setTimeout(r, 600));
             }
 
-            document.getElementById('terminal-page').style.display = 'none';
-            document.getElementById('chat-page').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('terminal-page').style.display = 'none';
+                document.getElementById('chat-page').style.display = 'block';
+            }, 1000);
         }
 
         function typeEffect(el, text) {
             return new Promise(resolve => {
                 let i = 0;
                 const interval = setInterval(() => {
-                    el.innerHTML += text.charAt(i);
-                    i++;
+                    el.innerHTML += text.charAt(i); i++;
                     if (i >= text.length) { clearInterval(interval); resolve(); }
-                }, 70);
+                }, 40);
             });
         }
 
         function sendReply() {
             const val = document.getElementById('user-reply').value;
-            window.location.href = `https://wa.me/254708671172?text=${encodeURIComponent("Hey Phestone! " + val + "see you on valentine's ❤️")}`;
+            window.location.href = `https://wa.me/254708671172?text=${encodeURIComponent("Hey Phestone! " + val + " ❤️")}`;
         }
     </script>
 </body>
