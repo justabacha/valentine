@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For My Best Friend ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Fira+Code:wght@400;500&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-pink: #ff4d6d;
+            --soft-pink: #fff0f3;
+            --dark-pink: #800f2f;
+            --terminal-green: #00ff41;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--soft-pink);
+        }
+
+        /* Background Music UI */
+        #music-container {
+            position: fixed;
+            bottom: -100px;
+            left: 0;
+            pointer-events: none;
+        }
+
+        /* Landing Page Style */
+        #landing-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            transition: opacity 0.8s ease;
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3.5rem;
+            color: var(--dark-pink);
+            margin-bottom: 30px;
+        }
+
+        .btn-container {
+            position: relative;
+            width: 300px;
+            height: 100px;
+        }
+
+        button {
+            padding: 15px 35px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: absolute;
+        }
+
+        #yes-btn {
+            background-color: var(--primary-pink);
+            color: white;
+            left: 0;
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.4);
+            animation: pulse 1.5s infinite;
+        }
+
+        #no-btn {
+            background-color: #ccc;
+            color: #666;
+            right: 0;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Terminal Screen */
+        #terminal-page {
+            display: none;
+            background-color: #0d0208;
+            height: 100vh;
+            width: 100vw;
+            color: #ff0050;
+            font-family: 'Fira Code', monospace;
+            padding: 40px;
+            box-sizing: border-box;
+            font-size: 1.1rem;
+            overflow: hidden;
+        }
+
+        /* Final Question Card */
+        #final-card {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 450px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            z-index: 100;
+        }
+
+        .profile-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid var(--primary-pink);
+            margin-bottom: 20px;
+            object-fit: cover;
+        }
+
+        .question-text {
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid var(--soft-pink);
+            margin-bottom: 15px;
+            font-family: inherit;
+        }
+
+        .send-btn {
+            background-color: #25D366;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="music-container">
+        <iframe id="yt-player" width="560" height="315" src="https://www.youtube.com/embed/uyNVv6Q8CxY?enablejsapi=1" frameborder="0" allow="autoplay"></iframe>
+    </div>
+
+    <div id="landing-page">
+        <h1>Will you be my Valentine?</h1>
+        <div class="btn-container">
+            <button id="yes-btn" onclick="startTerminal()">YES</button>
+            <button id="no-btn" onmouseover="moveNoButton()">No</button>
+        </div>
+    </div>
+
+    <div id="terminal-page">
+        <div id="terminal-content"></div>
+    </div>
+
+    <div id="final-card">
+        <img src="https://i.postimg.cc/yNbmjNjn/IMG-5898-2.jpg" class="profile-img" alt="Phestone">
+        <div class="question-text">
+            <strong>Okay, okay, you caught me!</strong> <br><br>
+            Since you finally pinned down that 'YES' button... how stressed were you on a scale of 1 to 10? 😂<br><br>
+            Be honest—because your answer determines exactly how much dessert I’m buying you! What treat would make this night perfect?
+        </div>
+        <textarea id="reply-box" placeholder="Your scale (1-10) and your favorite dessert..."></textarea>
+        <button class="send-btn" onclick="sendToWhatsApp()">Send to Phestone ❤️</button>
+    </div>
+
+    <script>
+        // Music logic
+        function playMusic() {
+            const iframe = document.getElementById('yt-player');
+            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+        }
+
+        // Phase 1: Moving "No" Button
+        function moveNoButton() {
+            const btn = document.getElementById('no-btn');
+            const x = Math.random() * (window.innerWidth - 100);
+            const y = Math.random() * (window.innerHeight - 50);
+            btn.style.position = 'fixed';
+            btn.style.left = x + 'px';
+            btn.style.top = y + 'px';
+        }
+
+        // Phase 2: Terminal Sequence
+        async function startTerminal() {
+            playMusic();
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('terminal-page').style.display = 'block';
+            
+            const lines = [
+                "[SYSTEM]: Unauthorized access detected...",
+                "[SYSTEM]: Bypassing 'No' button security protocols...",
+                "[SYSTEM]: Initializing 'Valentine_2026' protocol...",
+                "[SYSTEM]: Scanning for Heartbeat... OK.",
+                "[SYSTEM]: Analyzing Compatibility... 100% Match Found.",
+                "[USER]: Phestone has a final question for you..."
+            ];
+
+            const container = document.getElementById('terminal-content');
+            for (let line of lines) {
+                const p = document.createElement('p');
+                container.appendChild(p);
+                await typeText(p, line);
+                await new Promise(r => setTimeout(r, 400));
+            }
+
+            setTimeout(() => {
+                document.getElementById('final-card').style.display = 'block';
+            }, 1000);
+        }
+
+        function typeText(element, text) {
+            return new Promise(resolve => {
+                let i = 0;
+                const interval = setInterval(() => {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    if (i >= text.length) {
+                        clearInterval(interval);
+                        resolve();
+                    }
+                }, 40);
+            });
+        }
+
+        // Phase 3: WhatsApp Integration
+        function sendToWhatsApp() {
+            const reply = document.getElementById('reply-box').value;
+            const phoneNumber = "254708671172";
+            const message = `Hey Phestone! ${reply} ❤️`;
+            const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+  </html>
+  
