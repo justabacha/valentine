@@ -15,7 +15,7 @@
             --code-red: #ff3131;
             --code-purple: #bd93f9;
             --code-pink: #ff79c6;
-            --symbol-gold: #ffffff;
+            --symbol-white: #ffffff;
         }
 
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: -apple-system, sans-serif; overflow: hidden; background: #000; }
@@ -50,7 +50,7 @@
         }
         .line { margin-bottom: 8px; display: block; line-height: 1.5; white-space: pre-wrap; }
         .sys-tag { color: var(--code-red); font-weight: bold; }
-        .symbol { color: var(--symbol-gold); font-weight: bold; }
+        .symbol { color: var(--symbol-white); font-weight: bold; }
         .phestone-name { color: var(--code-blue); text-decoration: underline; font-weight: bold; }
         .blue { color: var(--code-blue); } .yellow { color: var(--code-yellow); }
         .green { color: var(--code-green); } .purple { color: var(--code-purple); }
@@ -212,22 +212,23 @@
                 tempDiv.innerHTML = finalHTML;
                 const nodes = Array.from(tempDiv.childNodes);
                 let nodeIdx = 0;
+                
                 function next() {
                     if (nodeIdx >= nodes.length) { resolve(); return; }
                     let node = nodes[nodeIdx];
-                    if (node.nodeType === 3) {
+                    if (node.nodeType === 3) { // TEXT
                         let text = node.textContent; let charIdx = 0;
                         let int = setInterval(() => {
                             target.innerHTML += text.charAt(charIdx); charIdx++;
                             if (charIdx >= text.length) { clearInterval(int); nodeIdx++; next(); }
-                        }, 40);
-                    } else {
+                        }, 70); // HUMAN TYPING SPEED
+                    } else { // SPAN
                         let ns = document.createElement('span'); ns.className = node.className;
                         target.appendChild(ns); let text = node.textContent; let charIdx = 0;
                         let int = setInterval(() => {
                             ns.innerHTML += text.charAt(charIdx); charIdx++;
                             if (charIdx >= text.length) { clearInterval(int); nodeIdx++; next(); }
-                        }, 40);
+                        }, 70); // HUMAN TYPING SPEED
                     }
                 }
                 next();
@@ -250,9 +251,9 @@
 
         function sendReply() {
             const val = document.getElementById('user-reply').value;
-            window.location.href = `https://wa.me/254708671172?text=${encodeURIComponent("Hey Phestone! " + val + " see you on valentine's day😘❤️")}`;
+            window.location.href = `https://wa.me/254708671172?text=${encodeURIComponent("Hey Phestone! " + val + " ❤️")}`;
         }
     </script>
 </body>
-                </html>
-                    
+    </html>
+        
