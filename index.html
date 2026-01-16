@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>For My Best Friend ❤️</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Fira+Code:wght@400;500&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For sweet•staff🍒</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-pink: #ff4d6d;
-            --soft-pink: #fff0f3;
-            --dark-pink: #800f2f;
-            --terminal-green: #00ff41;
+            --ios-blue: #007AFF;
+            --system-red: #ff3b30;
+            --terminal-pink: #ff4d6d;
         }
 
         body, html {
@@ -18,20 +17,18 @@
             padding: 0;
             height: 100%;
             width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #fff0f3;
             overflow: hidden;
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--soft-pink);
         }
 
-        /* Background Music UI */
-        #music-container {
-            position: fixed;
-            bottom: -100px;
-            left: 0;
-            pointer-events: none;
+        /* Hidden Music */
+        #music-box {
+            position: absolute;
+            left: -9999px;
         }
 
-        /* Landing Page Style */
+        /* Phase 1: Landing Page */
         #landing-page {
             display: flex;
             flex-direction: column;
@@ -39,133 +36,186 @@
             align-items: center;
             height: 100vh;
             text-align: center;
-            transition: opacity 0.8s ease;
+            padding: 20px;
         }
 
         h1 {
-            font-family: 'Dancing Script', cursive;
-            font-size: 3.5rem;
-            color: var(--dark-pink);
-            margin-bottom: 30px;
+            color: #800f2f;
+            font-size: 2.2rem;
+            margin-bottom: 50px;
         }
 
         .btn-container {
             position: relative;
-            width: 300px;
-            height: 100px;
+            width: 100%;
+            max-width: 300px;
+            height: 150px;
         }
 
-        button {
-            padding: 15px 35px;
-            font-size: 1.2rem;
-            border-radius: 50px;
+        .action-btn {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 30px;
             border: none;
-            cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s ease;
+            cursor: pointer;
             position: absolute;
+            transition: transform 0.1s ease;
         }
 
         #yes-btn {
-            background-color: var(--primary-pink);
+            background-color: #ff4d6d;
             color: white;
-            left: 0;
-            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.4);
-            animation: pulse 1.5s infinite;
+            left: 10px;
         }
 
         #no-btn {
-            background-color: #ccc;
-            color: #666;
-            right: 0;
+            background-color: #e5e5ea;
+            color: #3a3a3c;
+            right: 10px;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* Terminal Screen */
+        /* Phase 2: Terminal */
         #terminal-page {
             display: none;
             background-color: #0d0208;
             height: 100vh;
             width: 100vw;
-            color: #ff0050;
-            font-family: 'Fira Code', monospace;
-            padding: 40px;
-            box-sizing: border-box;
-            font-size: 1.1rem;
-            overflow: hidden;
-        }
-
-        /* Final Question Card */
-        #final-card {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 450px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            text-align: center;
-            z-index: 100;
+            box-sizing: border-box;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
         }
 
-        .profile-img {
-            width: 120px;
-            height: 120px;
+        .sys-red { color: var(--system-red); }
+        .txt-pink { color: var(--terminal-pink); }
+
+        /* Phase 3: iPhone Chat */
+        #chat-page {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            background: url('https://i.postimg.cc/c1wsd5p6/IMG-6683.jpg') no-repeat center center;
+            background-size: cover;
+            position: relative;
+        }
+
+        /* iOS Header */
+        .chat-header {
+            background: rgba(249, 249, 249, 0.94);
+            backdrop-filter: blur(20px);
+            padding: 50px 20px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-bottom: 0.5px solid #d1d1d1;
+        }
+
+        .header-img {
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
-            border: 4px solid var(--primary-pink);
-            margin-bottom: 20px;
             object-fit: cover;
+            margin-bottom: 5px;
         }
 
-        .question-text {
-            color: #333;
-            margin-bottom: 20px;
-            line-height: 1.5;
+        .header-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #000;
         }
 
-        textarea {
+        .active-now {
+            font-size: 0.65rem;
+            color: #8e8e93;
+        }
+
+        /* Message Bubbles */
+        .chat-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bubble-wrapper {
+            position: relative;
+            max-width: 80%;
+            margin-top: 20px;
+        }
+
+        .imessage-bubble {
+            background-color: #e9e9eb;
+            color: black;
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        .my-photo-floating {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid white;
+            position: absolute;
+            bottom: -10px;
+            right: -15px;
+            z-index: 2;
+            object-fit: cover;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* iOS Input Bar */
+        .input-bar {
+            position: fixed;
+            bottom: 0;
             width: 100%;
-            height: 80px;
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid var(--soft-pink);
-            margin-bottom: 15px;
-            font-family: inherit;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-sizing: border-box;
         }
 
-        .send-btn {
-            background-color: #25D366;
+        .text-input {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #d1d1d1;
+            padding: 8px 15px;
+            border-radius: 20px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .send-btn-ios {
+            background-color: var(--ios-blue);
             color: white;
-            padding: 12px 30px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
             border: none;
-            border-radius: 25px;
-            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
-            width: 100%;
+            font-size: 1.2rem;
         }
     </style>
 </head>
 <body>
 
-    <div id="music-container">
-        <iframe id="yt-player" width="560" height="315" src="https://www.youtube.com/embed/uyNVv6Q8CxY?enablejsapi=1" frameborder="0" allow="autoplay"></iframe>
+    <div id="music-box">
+        <iframe id="yt-player" width="100" height="100" src="https://www.youtube.com/embed/uyNVv6Q8CxY?enablejsapi=1" allow="autoplay"></iframe>
     </div>
 
     <div id="landing-page">
         <h1>Will you be my Valentine?</h1>
         <div class="btn-container">
-            <button id="yes-btn" onclick="startTerminal()">YES</button>
-            <button id="no-btn" onmouseover="moveNoButton()">No</button>
+            <button id="yes-btn" class="action-btn" onclick="startTerminal()">YES</button>
+            <button id="no-btn" class="action-btn" onclick="moveNoButton()">No</button>
         </div>
     </div>
 
@@ -173,85 +223,91 @@
         <div id="terminal-content"></div>
     </div>
 
-    <div id="final-card">
-        <img src="https://i.postimg.cc/yNbmjNjn/IMG-5898-2.jpg" class="profile-img" alt="Phestone">
-        <div class="question-text">
-            <strong>Okay, okay, you caught me!</strong> <br><br>
-            Since you finally pinned down that 'YES' button... how stressed were you on a scale of 1 to 10? 😂<br><br>
-            Be honest—because your answer determines exactly how much dessert I’m buying you! What treat would make this night perfect?
+    <div id="chat-page">
+        <div class="chat-header">
+            <img src="https://i.postimg.cc/MXJ2Qxgv/IMG-6685.jpg" class="header-img">
+            <span class="header-name">sweet•staff🍒</span>
+            <span class="active-now">Active now</span>
         </div>
-        <textarea id="reply-box" placeholder="Your scale (1-10) and your favorite dessert..."></textarea>
-        <button class="send-btn" onclick="sendToWhatsApp()">Send to Phestone ❤️</button>
+
+        <div class="chat-content">
+            <div class="bubble-wrapper">
+                <div class="imessage-bubble">
+                    Okay, okay, you caught me! Since you finally pinned down that 'YES' button... how stressed were you on a scale of 1 to 10? 😂<br><br>
+                    Be honest—because your answer determines exactly how much dessert I’m buying you! What treat would make this night perfect?
+                </div>
+                <img src="https://i.postimg.cc/yNbmjNjn/IMG-5898-2.jpg" class="my-photo-floating">
+            </div>
+        </div>
+
+        <div class="input-bar">
+            <input type="text" id="user-reply" class="text-input" placeholder="iMessage">
+            <button class="send-btn-ios" onclick="sendReply()">↑</button>
+        </div>
     </div>
 
     <script>
-        // Music logic
         function playMusic() {
             const iframe = document.getElementById('yt-player');
             iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
         }
 
-        // Phase 1: Moving "No" Button
         function moveNoButton() {
             const btn = document.getElementById('no-btn');
-            const x = Math.random() * (window.innerWidth - 100);
-            const y = Math.random() * (window.innerHeight - 50);
+            const x = Math.random() * (window.innerWidth - 120);
+            const y = Math.random() * (window.innerHeight - 60);
             btn.style.position = 'fixed';
             btn.style.left = x + 'px';
             btn.style.top = y + 'px';
         }
 
-        // Phase 2: Terminal Sequence
         async function startTerminal() {
             playMusic();
             document.getElementById('landing-page').style.display = 'none';
             document.getElementById('terminal-page').style.display = 'block';
             
             const lines = [
-                "[SYSTEM]: Unauthorized access detected...",
-                "[SYSTEM]: Bypassing 'No' button security protocols...",
-                "[SYSTEM]: Initializing 'Valentine_2026' protocol...",
-                "[SYSTEM]: Scanning for Heartbeat... OK.",
-                "[SYSTEM]: Analyzing Compatibility... 100% Match Found.",
-                "[USER]: Phestone has a final question for you..."
+                {t: "[SYSTEM]: Unauthorized access detected...", c: "sys-red"},
+                {t: "[SYSTEM]: Bypassing 'No' button security...", c: "sys-red"},
+                {t: "[SYSTEM]: Initializing 'Valentine_2026' protocol...", c: "sys-red"},
+                {t: "[SYSTEM]: Scanning for Heartbeat... OK.", c: "sys-red"},
+                {t: "[SYSTEM]: Connection established.", c: "sys-red"},
+                {t: "Phestone: Sending private message...", c: "txt-pink"}
             ];
 
             const container = document.getElementById('terminal-content');
             for (let line of lines) {
                 const p = document.createElement('p');
+                p.className = line.c;
                 container.appendChild(p);
-                await typeText(p, line);
-                await new Promise(r => setTimeout(r, 400));
+                await typeEffect(p, line.t);
+                await new Promise(r => setTimeout(r, 800)); // Slowed down
             }
 
             setTimeout(() => {
-                document.getElementById('final-card').style.display = 'block';
+                document.getElementById('terminal-page').style.display = 'none';
+                document.getElementById('chat-page').style.display = 'block';
             }, 1000);
         }
 
-        function typeText(element, text) {
+        function typeEffect(el, text) {
             return new Promise(resolve => {
                 let i = 0;
                 const interval = setInterval(() => {
-                    element.innerHTML += text.charAt(i);
+                    el.innerHTML += text.charAt(i);
                     i++;
-                    if (i >= text.length) {
-                        clearInterval(interval);
-                        resolve();
-                    }
-                }, 40);
+                    if (i >= text.length) { clearInterval(interval); resolve(); }
+                }, 60); // Slower typing
             });
         }
 
-        // Phase 3: WhatsApp Integration
-        function sendToWhatsApp() {
-            const reply = document.getElementById('reply-box').value;
-            const phoneNumber = "254708671172";
-            const message = `Hey Phestone! ${reply} ❤️`;
-            const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-            window.open(url, '_blank');
+        function sendReply() {
+            const val = document.getElementById('user-reply').value;
+            const phone = "254708671172";
+            const text = encodeURIComponent(`Hey Phestone! ${val} ❤️`);
+            window.location.href = `https://wa.me/${phone}?text=${text}`;
         }
     </script>
 </body>
-  </html>
-  
+    </html>
+    
