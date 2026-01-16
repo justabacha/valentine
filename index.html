@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>For sweet•staff🍒</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Fira+Code:wght@400;500&family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --ios-blue: #007AFF;
@@ -17,16 +17,12 @@
             padding: 0;
             height: 100%;
             width: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #fff0f3;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
             overflow: hidden;
         }
 
         /* Hidden Music */
-        #music-box {
-            position: absolute;
-            left: -9999px;
-        }
+        #music-box { position: absolute; left: -9999px; }
 
         /* Phase 1: Landing Page */
         #landing-page {
@@ -35,44 +31,76 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            background: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), 
+                        url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
             text-align: center;
-            padding: 20px;
         }
 
         h1 {
+            font-family: 'Great Vibes', cursive;
             color: #800f2f;
-            font-size: 2.2rem;
-            margin-bottom: 50px;
+            font-size: 3.5rem;
+            margin-bottom: 60px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
         .btn-container {
             position: relative;
             width: 100%;
-            max-width: 300px;
-            height: 150px;
+            max-width: 400px;
+            height: 200px;
         }
 
-        .action-btn {
-            padding: 15px 40px;
-            font-size: 1.1rem;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            position: absolute;
-            transition: transform 0.1s ease;
-        }
-
+        /* Heart Shape YES Button */
         #yes-btn {
             background-color: #ff4d6d;
+            width: 100px;
+            height: 90px;
+            position: absolute;
+            left: 50%;
+            transform: translate(-120%, 0);
+            cursor: pointer;
+            clip-path: path('M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402m5.726-20.583c-2.203 0-4.446 1.042-5.726 3.238-1.285-2.206-3.522-3.248-5.719-3.248-3.183 0-6.281 2.187-6.281 6.191 0 4.661 5.571 9.429 12 15.809 6.43-6.38 12-11.148 12-15.809 0-4.011-3.095-6.181-6.274-6.181');
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            left: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            animation: pulse 1.2s infinite;
+            border: none;
+        }
+
+        #yes-text {
+            position: absolute;
+            left: 50%;
+            transform: translate(-120%, 35px);
+            color: white;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-120%, 0) scale(1); }
+            50% { transform: translate(-120%, 0) scale(1.1); }
+            100% { transform: translate(-120%, 0) scale(1); }
         }
 
         #no-btn {
-            background-color: #e5e5ea;
-            color: #3a3a3c;
-            right: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 15px 30px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            position: absolute;
+            right: 20%;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         /* Phase 2: Terminal */
@@ -81,13 +109,10 @@
             background-color: #0d0208;
             height: 100vh;
             width: 100vw;
-            padding: 30px;
+            padding: 40px;
             box-sizing: border-box;
             font-family: 'Fira Code', monospace;
-            font-size: 0.9rem;
-            line-height: 1.6;
         }
-
         .sys-red { color: var(--system-red); }
         .txt-pink { color: var(--terminal-pink); }
 
@@ -96,140 +121,69 @@
             display: none;
             height: 100vh;
             width: 100vw;
-            background: url('https://i.postimg.cc/c1wsd5p6/IMG-6683.jpg') no-repeat center center;
+            background: url('https://i.postimg.cc/c1wsd5p6/IMG-6683.jpg') no-repeat center center fixed;
             background-size: cover;
-            position: relative;
         }
 
-        /* iOS Header */
         .chat-header {
-            background: rgba(249, 249, 249, 0.94);
-            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
             padding: 50px 20px 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            border-bottom: 0.5px solid #d1d1d1;
+            border-bottom: 0.5px solid #ccc;
         }
 
-        .header-img {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 5px;
-        }
+        .header-img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+        .header-name { font-weight: 600; margin-top: 5px; }
 
-        .header-name {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #000;
-        }
-
-        .active-now {
-            font-size: 0.65rem;
-            color: #8e8e93;
-        }
-
-        /* Message Bubbles */
-        .chat-content {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .bubble-wrapper {
-            position: relative;
-            max-width: 80%;
-            margin-top: 20px;
-        }
-
+        .bubble-wrapper { position: relative; max-width: 75%; margin: 30px 20px; }
         .imessage-bubble {
             background-color: #e9e9eb;
-            color: black;
-            padding: 12px 16px;
+            padding: 15px;
             border-radius: 20px;
-            font-size: 0.95rem;
-            line-height: 1.4;
+            font-size: 1rem;
             position: relative;
         }
 
         .my-photo-floating {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            border: 2px solid white;
-            position: absolute;
-            bottom: -10px;
-            right: -15px;
-            z-index: 2;
-            object-fit: cover;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            width: 40px; height: 40px; border-radius: 50%;
+            position: absolute; bottom: -15px; right: -15px;
+            border: 2px solid white; object-fit: cover;
         }
 
-        /* iOS Input Bar */
         .input-bar {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px 15px 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-sizing: border-box;
+            position: fixed; bottom: 0; width: 100%;
+            background: rgba(255,255,255,0.9);
+            padding: 15px; display: flex; gap: 10px; box-sizing: border-box;
         }
-
-        .text-input {
-            flex: 1;
-            background: #fff;
-            border: 1px solid #d1d1d1;
-            padding: 8px 15px;
-            border-radius: 20px;
-            outline: none;
-            font-size: 1rem;
-        }
-
-        .send-btn-ios {
-            background-color: var(--ios-blue);
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
+        .text-input { flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 20px; }
+        .send-btn-ios { background: var(--ios-blue); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; }
     </style>
 </head>
 <body>
 
     <div id="music-box">
-        <iframe id="yt-player" width="100" height="100" src="https://www.youtube.com/embed/uyNVv6Q8CxY?enablejsapi=1" allow="autoplay"></iframe>
+        <iframe id="yt-player" width="100" height="100" src="https://www.youtube.com/embed/uyNVv6Q8CxY?enablejsapi=1"></iframe>
     </div>
 
     <div id="landing-page">
-        <h1>Will you be my Valentine?</h1>
+        <h1>Will you be my valentine? 😍</h1>
         <div class="btn-container">
-            <button id="yes-btn" class="action-btn" onclick="startTerminal()">YES</button>
-            <button id="no-btn" class="action-btn" onclick="moveNoButton()">No</button>
+            <button id="yes-btn" onclick="startTerminal()"></button>
+            <span id="yes-text">YES</span>
+            <button id="no-btn" onclick="moveNoButton()">No</button>
         </div>
     </div>
 
-    <div id="terminal-page">
-        <div id="terminal-content"></div>
-    </div>
+    <div id="terminal-page"><div id="terminal-content"></div></div>
 
     <div id="chat-page">
         <div class="chat-header">
             <img src="https://i.postimg.cc/MXJ2Qxgv/IMG-6685.jpg" class="header-img">
             <span class="header-name">sweet•staff🍒</span>
-            <span class="active-now">Active now</span>
         </div>
-
         <div class="chat-content">
             <div class="bubble-wrapper">
                 <div class="imessage-bubble">
@@ -239,7 +193,6 @@
                 <img src="https://i.postimg.cc/yNbmjNjn/IMG-5898-2.jpg" class="my-photo-floating">
             </div>
         </div>
-
         <div class="input-bar">
             <input type="text" id="user-reply" class="text-input" placeholder="iMessage">
             <button class="send-btn-ios" onclick="sendReply()">↑</button>
@@ -247,31 +200,33 @@
     </div>
 
     <script>
-        function playMusic() {
-            const iframe = document.getElementById('yt-player');
-            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-        }
+        const emojis = ["💔","🥺","😮‍💨","😥","🤬","😱","🤕","🙊","🥀","😭"];
+        let emojiIdx = 0;
 
         function moveNoButton() {
             const btn = document.getElementById('no-btn');
-            const x = Math.random() * (window.innerWidth - 120);
-            const y = Math.random() * (window.innerHeight - 60);
+            btn.innerHTML = `No ${emojis[emojiIdx]}`;
+            emojiIdx = (emojiIdx + 1) % emojis.length;
+            
+            const x = Math.random() * (window.innerWidth - 150);
+            const y = Math.random() * (window.innerHeight - 100);
             btn.style.position = 'fixed';
             btn.style.left = x + 'px';
             btn.style.top = y + 'px';
         }
 
         async function startTerminal() {
-            playMusic();
+            const iframe = document.getElementById('yt-player');
+            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+            
             document.getElementById('landing-page').style.display = 'none';
             document.getElementById('terminal-page').style.display = 'block';
             
             const lines = [
                 {t: "[SYSTEM]: Unauthorized access detected...", c: "sys-red"},
-                {t: "[SYSTEM]: Bypassing 'No' button security...", c: "sys-red"},
-                {t: "[SYSTEM]: Initializing 'Valentine_2026' protocol...", c: "sys-red"},
-                {t: "[SYSTEM]: Scanning for Heartbeat... OK.", c: "sys-red"},
-                {t: "[SYSTEM]: Connection established.", c: "sys-red"},
+                {t: "[SYSTEM]: Bypassing 'No' button protocols...", c: "sys-red"},
+                {t: "[SYSTEM]: Initializing 'Valentine_2026'...", c: "sys-red"},
+                {t: "[SYSTEM]: Analyzing compatibility... 100%", c: "sys-red"},
                 {t: "Phestone: Sending private message...", c: "txt-pink"}
             ];
 
@@ -281,13 +236,11 @@
                 p.className = line.c;
                 container.appendChild(p);
                 await typeEffect(p, line.t);
-                await new Promise(r => setTimeout(r, 800)); // Slowed down
+                await new Promise(r => setTimeout(r, 1000));
             }
 
-            setTimeout(() => {
-                document.getElementById('terminal-page').style.display = 'none';
-                document.getElementById('chat-page').style.display = 'block';
-            }, 1000);
+            document.getElementById('terminal-page').style.display = 'none';
+            document.getElementById('chat-page').style.display = 'block';
         }
 
         function typeEffect(el, text) {
@@ -297,15 +250,13 @@
                     el.innerHTML += text.charAt(i);
                     i++;
                     if (i >= text.length) { clearInterval(interval); resolve(); }
-                }, 60); // Slower typing
+                }, 70);
             });
         }
 
         function sendReply() {
             const val = document.getElementById('user-reply').value;
-            const phone = "254708671172";
-            const text = encodeURIComponent(`Hey Phestone! ${val} ❤️`);
-            window.location.href = `https://wa.me/${phone}?text=${text}`;
+            window.location.href = `https://wa.me/254708671172?text=${encodeURIComponent("Hey Phestone! " + val + " ❤️")}`;
         }
     </script>
 </body>
