@@ -8,12 +8,12 @@
     <style>
         :root {
             --ios-blue: #007AFF;
-            --terminal-bg: #1e1e1e;
-            --code-blue: #4fc1ff;
-            --code-yellow: #dcdcaa;
-            --code-green: #6a9955;
-            --code-red: #f44747;
-            --code-pink: #c586c0;
+            --terminal-bg: #0d0208;
+            --code-blue: #00d4ff;
+            --code-yellow: #ffcc00;
+            --code-green: #39ff14;
+            --code-red: #ff3131;
+            --code-pink: #ff00ff;
         }
 
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: -apple-system, sans-serif; overflow: hidden; }
@@ -44,15 +44,14 @@
         /* Phase 2: Professional Terminal */
         #terminal-page {
             display: none; background-color: var(--terminal-bg); height: 100vh; width: 100vw;
-            padding: 25px; box-sizing: border-box; font-family: 'Fira Code', monospace; font-size: 0.85rem; overflow-y: auto;
+            padding: 30px; box-sizing: border-box; font-family: 'Fira Code', monospace; font-size: 0.9rem; overflow-y: auto;
         }
-        .line { margin-bottom: 8px; display: block; }
+        .line { margin-bottom: 10px; display: block; line-height: 1.5; }
+        .sys-tag { color: var(--code-red); font-weight: bold; }
         .blue { color: var(--code-blue); }
         .yellow { color: var(--code-yellow); }
         .green { color: var(--code-green); }
-        .red { color: var(--code-red); }
         .pink { color: var(--code-pink); }
-        .indent { margin-left: 20px; }
 
         /* Phase 3: iPhone Chat */
         #chat-page { display: none; height: 100vh; width: 100vw; background: url('https://i.postimg.cc/c1wsd5p6/IMG-6683.jpg') no-repeat center center; background-size: cover; position: relative; }
@@ -61,10 +60,10 @@
         .header-name { font-weight: 600; font-size: 0.9rem; margin-top: 5px; }
         .bubble-wrapper { position: relative; max-width: 80%; margin: 30px 20px; }
         .imessage-bubble { background-color: #e9e9eb; padding: 15px; border-radius: 20px; font-size: 0.95rem; line-height: 1.4; }
-        .my-photo-floating { width: 40px; height: 40px; border-radius: 50%; position: absolute; bottom: -15px; right: -15px; border: 2px solid white; object-fit: cover; }
+        .my-photo-floating { width: 40px; height: 40px; border-radius: 50%; position: absolute; bottom: -15px; right: -15px; border: 2px solid white; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
         .input-bar { position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.9); padding: 10px 15px 30px; display: flex; gap: 10px; box-sizing: border-box; align-items: center; }
-        .text-input { flex: 1; border: 1px solid #ccc; padding: 10px 15px; border-radius: 25px; outline: none; }
-        .send-btn-ios { background: var(--ios-blue); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .text-input { flex: 1; border: 1px solid #ccc; padding: 10px 15px; border-radius: 25px; outline: none; font-size: 1rem; }
+        .send-btn-ios { background: var(--ios-blue); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -129,27 +128,36 @@
             document.getElementById('terminal-page').style.display = 'block';
             
             const script = [
-                {t: "system unauthorized access detected...", c: "red"},
-                {t: "system bypassing 'NO' button protocol", c: "blue"},
-                {t: "      » success", c: "green"},
-                {t: "system initializing 'valentine_2026'...", c: "yellow"},
-                {t: "      » date linked '14th' February", c: "green"},
-                {t: "system scanning heartbeat...", c: "blue"},
-                {t: "      » match found", c: "green"},
-                {t: "      » soulmate confirmed", c: "green"},
-                {t: "system analyzing compatibility... 100%", c: "yellow"},
-                {t: "system override 'success'", c: "red"},
-                {t: "      » 'YES' i'll be ur valentine...", c: "green"},
-                {t: "Phestone: sending private message...", c: "pink"}
+                {t: "[system] unauthorized access detected...", c: "red", wait: 800},
+                {t: "[system] bypassing 'NO' button protocol", c: "blue", wait: 1200},
+                {t: "      » success", c: "green", wait: 500},
+                {t: "[system] initializing 'valentine_2026'...", c: "yellow", wait: 1500},
+                {t: "      » date linked '14th' February", c: "green", wait: 600},
+                {t: "[system] scanning heartbeat...", c: "blue", wait: 2000},
+                {t: "      » match found", c: "green", wait: 400},
+                {t: "      » soulmate confirmed", c: "green", wait: 800},
+                {t: "[system] analyzing compatibility... 100%", c: "yellow", wait: 1500},
+                {t: "[system] override 'success'", c: "red", wait: 1000},
+                {t: "      » 'YES' i'll be ur valentine...", c: "green", wait: 1200},
+                {t: "Phestone: sending private message...", c: "pink", wait: 500}
             ];
 
             const container = document.getElementById('terminal-content');
             for (let line of script) {
                 const span = document.createElement('span');
-                span.className = `line ${line.c}`;
+                span.className = `line`;
+                
+                // Special handling for [system] brackets color
+                if (line.t.startsWith("[system]")) {
+                    span.innerHTML = `<span class="sys-tag">[system]</span> <span class="${line.c}">${line.t.replace('[system]', '')}</span>`;
+                } else {
+                    span.className += ` ${line.c}`;
+                    span.innerHTML = line.t;
+                }
+                
                 container.appendChild(span);
-                await typeEffect(span, line.t);
-                await new Promise(r => setTimeout(r, 600));
+                await typeEffect(span, line.t, line.t.startsWith("[system]"));
+                await new Promise(r => setTimeout(r, line.wait));
             }
 
             setTimeout(() => {
@@ -158,13 +166,28 @@
             }, 1000);
         }
 
-        function typeEffect(el, text) {
+        function typeEffect(el, text, hasTag) {
             return new Promise(resolve => {
                 let i = 0;
-                const interval = setInterval(() => {
-                    el.innerHTML += text.charAt(i); i++;
-                    if (i >= text.length) { clearInterval(interval); resolve(); }
-                }, 40);
+                let fullText = text;
+                // If it has a tag, we only want to type the part AFTER the tag
+                if(hasTag) {
+                   const cleanText = text.replace('[system]', '');
+                   const textSpan = el.querySelector('span:last-child');
+                   textSpan.innerHTML = "";
+                   const interval = setInterval(() => {
+                        textSpan.innerHTML += cleanText.charAt(i);
+                        i++;
+                        if (i >= cleanText.length) { clearInterval(interval); resolve(); }
+                    }, 40);
+                } else {
+                    el.innerHTML = "";
+                    const interval = setInterval(() => {
+                        el.innerHTML += fullText.charAt(i);
+                        i++;
+                        if (i >= fullText.length) { clearInterval(interval); resolve(); }
+                    }, 40);
+                }
             });
         }
 
