@@ -79,31 +79,50 @@
         @keyframes bounceIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
 
         /* Phase 3: iPhone Chat */
-        #chat-page { display: none; height: 100vh; width: 100vw; background: url('https://i.postimg.cc/c1wsd5p6/IMG-6683.jpg') no-repeat center center; background-size: cover; position: relative; }
+        #chat-page { 
+            display: none; height: 100vh; width: 100vw; 
+            background: url('https://i.postimg.cc/c1wsd5p6/IMG-6683.jpg') no-repeat center center; 
+            background-size: cover; position: relative; 
+        }
         
+        /* THE TRANSPARENT GLASS HEADER */
         .chat-header { 
-            background: rgba(255, 255, 255, 0.85); 
-            backdrop-filter: blur(20px); 
-            padding: 30px 20px 10px; /* Reduced top padding to push it up */
+            background: rgba(255, 255, 255, 0.15); /* Very transparent */
+            backdrop-filter: blur(15px); /* Frosty blur effect */
+            -webkit-backdrop-filter: blur(15px);
+            padding: 35px 20px 15px;
             display: flex; flex-direction: column; align-items: center; 
-            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
             position: absolute; top: 0; width: 100%; z-index: 10;
         }
         
-        .header-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
-        .header-name { font-weight: 600; font-size: 0.85rem; margin-top: 4px; }
+        .header-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.3); }
+        .header-name { font-weight: 600; font-size: 0.85rem; margin-top: 4px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 
-        .chat-content { padding-top: 100px; } /* Ensures messages start below the fixed header */
-        .bubble-wrapper { position: relative; max-width: 80%; margin: 30px 20px; }
-        .imessage-bubble { background-color: #e9e9eb; padding: 15px; border-radius: 20px; font-size: 0.95rem; line-height: 1.4; color: black;}
+        .chat-content { padding-top: 110px; height: calc(100vh - 180px); overflow-y: auto; }
+        .bubble-wrapper { position: relative; max-width: 80%; margin: 20px 20px; }
+        .imessage-bubble { 
+            background-color: rgba(233, 233, 235, 0.9); /* Slightly see-through bubble */
+            padding: 15px; border-radius: 20px; font-size: 0.95rem; line-height: 1.4; color: black;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
         .my-photo-floating { width: 40px; height: 40px; border-radius: 50%; position: absolute; bottom: -15px; right: -15px; border: 2px solid white; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
         
+        /* THE TRANSPARENT GLASS INPUT BAR */
         .input-bar { 
             position: fixed; bottom: 0; width: 100%; 
-            background: rgba(255,255,255,0.9); 
-            padding: 10px 15px 30px; display: flex; gap: 10px; box-sizing: border-box; align-items: center; 
+            background: rgba(255, 255, 255, 0.15); /* Very transparent */
+            backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px);
+            padding: 10px 15px 35px; display: flex; gap: 10px; box-sizing: border-box; align-items: center; 
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
-        .text-input { flex: 1; border: 1px solid #ccc; padding: 10px 15px; border-radius: 25px; outline: none; font-size: 1rem; }
+        .text-input { 
+            flex: 1; border: 1px solid rgba(255,255,255,0.3); 
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px; border-radius: 25px; outline: none; font-size: 1rem; color: white;
+        }
+        .text-input::placeholder { color: rgba(255,255,255,0.6); }
         .send-btn-ios { background: var(--ios-blue); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; }
     </style>
 </head>
@@ -240,14 +259,14 @@
                         let int = setInterval(() => {
                             target.innerHTML += text.charAt(charIdx); charIdx++;
                             if (charIdx >= text.length) { clearInterval(int); nodeIdx++; next(); }
-                        }, 110); // SLOWED TO 110MS FOR TAP-TAP RHYTHM
+                        }, 110);
                     } else {
                         let ns = document.createElement('span'); ns.className = node.className;
                         target.appendChild(ns); let text = node.textContent; let charIdx = 0;
                         let int = setInterval(() => {
                             ns.innerHTML += text.charAt(charIdx); charIdx++;
                             if (charIdx >= text.length) { clearInterval(int); nodeIdx++; next(); }
-                        }, 110); // SLOWED TO 110MS FOR TAP-TAP RHYTHM
+                        }, 110);
                     }
                 }
                 next();
@@ -271,9 +290,9 @@
 
         function sendReply() {
             const val = document.getElementById('user-reply').value;
-            window.location.href = `https://wa.me/254708671172?text=${encodeURIComponent("Hey Phestone! " + val + " see you on valentine's ❤️")}`;
+            window.location.href = `https://wa.me/254708671172?text=${encodeURIComponent("Hey Phestone! " + val + " see you on valentine ❤️")}`;
         }
     </script>
 </body>
-                                       </html>
-            
+    </html>
+    
