@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baroness | Wishlist</title>
+    <link rel="stylesheet" href="wishlist.css">
+    <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js"></script>
+</head>
+<body>
+   <div class="wishlist-container">
+    <!-- Header: Profiles & Stats -->
+    <header class="adventure-header">
+        <div class="shared-profiles">
+            <div class="avatar-circle phesty-img">P</div>
+            <div class="avatar-circle bestie-img">B</div>
+        </div>
+        <div class="stat-capsule">
+            <img src="https://img.icons8.com/fluency/48/star.png" width="20"> 12 GOALS ! 4 DUSTED
+        </div>
+    </header>
+
+    <!-- Input Bar: Calendar + Text + Logo Star -->
+    <div class="cast-input-bar">
+    <button class="calendar-toggle">
+        <img src="https://img.icons8.com/fluency/48/calendar.png" width="22">
+    </button>
+    <textarea placeholder="Cust a new wish, Blud....."></textarea>
+    <button class="cast-star-btn">
+        <img src="https://img.icons8.com/fluency/48/star.png" width="28">
+    </button>
+</div>
+
+<!-- Custom Glass Calendar Popup -->
+<div id="calendar-modal" class="calendar-morphism-vibe">
+    <div class="cal-header">
+        <button id="prevMonth" class="cal-nav">‹</button>
+        <span id="month-display">May 2026</span>
+        <button id="nextMonth" class="cal-nav">›</button>
+    </div>
+    <div class="cal-weekdays">
+        <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+    </div>
+    <div class="cal-grid" id="calendar-days">
+        <!-- Days injected by JS -->
+    </div>
+</div>
+
+<!-- The Mophosic Emoji Tray -->
+<div id="emoji-tray" class="emoji-tray-vibe">
+    <div id="dynamic-emoji-grid" class="emoji-grid-scroll">
+        <!-- JS will inject emojis here -->
+    </div>
+</div>
+
+<div id="rating-modal" class="modal-overlay" style="display: none;">
+    <div class="morphism-card rating-card">
+        <div class="rating-header">
+            <h3>RATE THE EXPERIENCE</h3>
+            <button class="close-modal" onclick="closeRatingModal()">×</button>
+        </div>
+
+        <!-- The Other Person's Rating Area -->
+        <div id="peer-rating-display" class="peer-display">
+            <!-- JS will inject: "NAME: 5 ⭐⭐⭐⭐⭐" -->
+        </div>
+
+        <div class="star-input-container">
+            <div class="star-row" id="star-row">
+                <span class="star" data-value="1">★</span>
+                <span class="star" data-value="2">★</span>
+                <span class="star" data-value="3">★</span>
+                <span class="star" data-value="4">★</span>
+                <span class="star" data-value="5">★</span>
+            </div>
+            <p id="rating-label">Select your rating</p>
+        </div>
+
+        <button class="confirm-btn" onclick="saveRating()">CONFIRM RATING</button>
+    </div>
+</div>
+
+    <main class="wish-gallery">
+</main>
+</div>
+<script src="/menu/emojis.js"></script>
+<script src="/menu/wishlist.js"></script>
+</body>
+</html>

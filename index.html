@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signature Loops | Phesty & Baroness</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#ff4d6d">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="menu.css">
+    <script src="https://kit.fontawesome.com/your-font-kit.js" crossorigin="anonymous"></script> <!-- Optional for icons, using outlined SVGs below -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div id="install-modal" style="display: none; position: fixed; bottom: 20px; right: 20px; background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 10001; border: 1px solid rgba(255,255,255,0.1);">
+        <p style="margin: 0 0 15px 0; color: white;">Ready to put Baroness on your Taskbar? 🦾</p>
+        <button id="install-btn" style="background: #ff4d6d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">Install App</button>
+        <button id="close-modal" style="background: transparent; color: #aaa; border: none; margin-left: 10px; cursor: pointer;">Maybe later</button>
+    </div>
+
+    <div id="lockscreen">
+        <div class="lock-box">
+            <h2 style="color: #ff4d6d; margin-bottom: 5px;">Vibe Profile 🌸</h2>
+            <p style="font-size: 0.9rem; opacity: 0.8;">Set your identity for the vault.</p>
+            
+            <div id="avatar-preview-container">
+                <div id="avatar-preview" onclick="document.getElementById('avatar-input').click()"></div>
+                <input type="file" id="avatar-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+            </div>
+
+            <input type="text" id="user-name" placeholder="Enter your nickname..." autocomplete="off">
+            
+            <div class="setup-actions">
+                <button class="mode-btn" onclick="saveSetup('Phesty')">Enter as Phesty🦾</button>
+                <button class="mode-btn" onclick="saveSetup('Baroness')">Enter as Baroness👑</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+       <header class="dashboard-header">
+            <div class="user-greeting-box" style="display: flex; align-items: center; gap: 15px;">
+                <div id="header-avatar-circle" onclick="openSettings()" title="Change Vibe" style="cursor: pointer;"></div>
+                <div class="greet-text">
+                    <h2 id="welcome-text">Hi User, Welcome.</h2>
+                    <p id="dynamic-greeting">Loading the vibe...</p>
+                </div>
+            </div>
+            
+            <div class="command-box">
+                <div id="local-time">14:00Hrs</div>
+
+                <div class="weather-circles-container">
+                    <div class="glass-bubble temp-bubble">
+                        <span class="icon">🌡️</span>
+                        <div class="bubble-content">
+                            <span id="temp">27°C</span>
+                            <span id="condition">Vibing...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-bubble humid-bubble">
+                        <span class="icon">🫧</span>
+                        <div class="bubble-content">
+                            <span id="humidity">34%</span>
+                            <span class="label">Humidity</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="preview-area">
+            <div class="quote-card" id="card1">
+                <div class="card-date" id="date1">April, Thursday 9th</div>
+                <div class="quote-text" id="text1">"I tell everyone we’re just friends..."</div>
+                <div class="author-badge">!!Baroness</div>
+            </div>
+
+            <div class="quote-card" id="card2">
+                <div class="card-date" id="date2">April, Thursday 9th</div>
+                <div class="quote-text" id="text2">"...I don't look at my friends like this."</div>
+                <div class="author-badge">!!Phesty</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="download-group">
+                <button class="save-btn" onclick="downloadCard('card1', 'Baroness-Vibe')">Save Baroness's Card 📥</button>
+                <button class="save-btn" onclick="downloadCard('card2', 'Phesty-Vibe')">Save Phesty's Card 📥</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="quotes.js"></script>
+    <script src="app.js"></script>
+    
+    <div id="vibe-menu-root" class="snapped-right">
+    <div id="vibe-menu-trigger"></div>
+
+    <nav id="vibe-menu-panel">
+    <!-- MESSAGES: Apple Messages/iMessage Style -->
+    <div class="vibe-menu-item" onclick="location.href='messages.html'">
+        <div class="vibe-circle">
+            <img src="https://img.icons8.com/color/48/imessage.png" width="30" alt="Messages">
+        </div>
+        <span class="item-label">MESSAGES</span>
+    </div>
+    
+    <!-- J.A.R.V.I.S: Gemini/AI Sparkle Style -->
+    <div class="vibe-menu-item" onclick="location.href='jarvis.html'">
+        <div class="vibe-circle">
+            <img src="https://img.icons8.com/fluency/48/artificial-intelligence.png" width="30" alt="JARVIS">
+        </div>
+        <span class="item-label">J.A.R.V.I.S</span>
+    </div>
+
+    <!-- PHOTOS:  -->
+    <div class="vibe-menu-item" onclick="location.href='photos.html'">
+        <div class="vibe-circle">
+            <img src="https://img.icons8.com/color/48/google-photos-new.png" width="30" alt="Photos">
+        </div>
+        <span class="item-label">PHOTOS</span>
+    </div>
+
+    <!-- WISHLIST: The Wish Bottle (Magic/Relatable vibe) -->
+    <div class="vibe-menu-item" onclick="location.href='wishlist.html'">
+        <div class="vibe-circle">
+            <img src="https://img.icons8.com/fluency/48/star.png" alt="Wishlist">
+        </div>
+        <span class="item-label">WISHLIST</span>
+    </div>
+</nav>
+</div>
+
+    <script src="menu.js"></script>
+</body>
+</html>

@@ -1,0 +1,587 @@
+/* Base Container & Background */
+body {
+    margin: 0;
+    padding: clamp(10px, 2vw, 20px) 0;
+    background: url('/bucket/Image-15.jpg') no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+    font-family: sans-serif;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    line-height: clamp(1.2, 1.5vw, 1.5); 
+}
+
+.wishlist-container {
+    padding: clamp(10px, 5vw, 30px);
+    width: clamp(300px, 90vw, 650px);
+    margin: 0 auto;
+    background: transparent; 
+    overflow-x: hidden;
+}
+
+/* Action Buttons (Delete, Download, Smiley) */
+.heart-btn, .emoji-action, .delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0.8;
+}
+
+/* SVG Action Buttons Styling - Hardened for Fluidity */
+.action-svg-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: clamp(4px, 1.2vw, 8px); 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.847); 
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.action-svg-btn svg {
+    width: clamp(20px, 4.5vw, 26px);
+    height: auto;
+    stroke-width: clamp(1.5px, 0.4vw, 2px); 
+}
+
+.action-svg-btn:hover {
+    color: #fff;
+    transform: translateY(-2px) scale(1.1);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+}
+
+/* Specific Delete Hover Vibe - Nakuru Heat Red */
+.delete-wish:hover {
+    color: #ff3b30;
+    filter: drop-shadow(0 0 10px rgba(255, 59, 48, 0.6));
+}
+
+/* Header & Profiles */
+.adventure-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: clamp(20px, 8vw, 40px);
+    align-items: center;
+}
+
+.avatar-circle {
+    width: clamp(40px, 10vw, 52px);
+    height: clamp(40px, 10vw, 52px);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.phesty-img { border: 3px solid #34C759; margin-right: -12px; position: relative; z-index: 2; color: #fff; }
+.bestie-img { border: 3px solid #4285F4; color: #fff; }
+
+.stat-capsule {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: clamp(0.7rem, 2vw, 0.9rem);
+}
+
+/* Glass Input Bar - Slim & Fluid */
+.cast-input-bar {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: clamp(35px, 5vw, 40px); 
+    padding: clamp(5px, 2vw, 10px) clamp(10px, 4vw, 20px);
+    display: flex;
+    align-items: center; 
+    margin-bottom: clamp(20px, 8vw, 40px);
+    gap: clamp(8px, 2vw, 15px);
+}
+
+.calendar-toggle, .cast-star-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    outline: none;
+    /* Fluid negative margin to pin to the far left edge */
+    margin-left: clamp(-12px, -2vw, -8px); 
+    flex-shrink: 0;
+}
+
+.cast-input-bar textarea {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+    background: transparent !important;
+    color: #fff;
+    resize: none;
+    line-height: 1.2;
+    padding-top: 6px;
+    padding-bottom: 2px;
+    height: 30px;        
+    max-height: 100px; 
+    overflow-y: hidden;
+}
+
+.cast-input-bar textarea::placeholder { 
+    color: rgba(255, 255, 255, 0.5); 
+}
+/* The Goal Rows - High Gloss Pills */
+.wish-row {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    /* Fluid border radius to keep the pill shape smooth */
+    border-radius: clamp(30px, 6vw, 50px);
+    /* Fluid padding and margin for the wholesome layout */
+    padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 20px);
+    margin-bottom: clamp(12px, 4vw, 20px);
+    display: flex;
+    align-items: center;
+    gap: clamp(10px, 2.5vw, 15px);
+    transition: all 0.3s ease;
+}
+
+/* CSS Stars - Fluidly pinned to the far left edge */
+.star-container {
+    flex-shrink: 0;
+    width: clamp(35px, 8vw, 45px);
+    height: clamp(35px, 8vw, 45px);
+    
+    margin-left: clamp(-10px, -4vw, -15px); 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    z-index: 2;
+}
+
+.star-number {
+    font-weight: 900;
+    font-size: clamp(0.8rem, 2vw, 1.1rem);
+    color: #000;
+    margin-top: 2px;
+}
+
+.green-star { background: #34C759; box-shadow: 0 0 15px rgba(52, 199, 89, 0.4); }
+.blue-star { background: #4285F4; box-shadow: 0 0 15px rgba(66, 133, 244, 0.4); }
+
+/* Date/Status Section */
+.meta-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: clamp(65px, 12vw, 85px); 
+    flex-shrink: 0;
+    gap: clamp(2px, 1vw, 5px);
+}
+
+.date-morphism {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: clamp(8px, 2vw, 12px);
+    padding: clamp(2px, 1vw, 4px);
+    font-size: clamp(0.55rem, 1.5vw, 0.7rem);
+    font-weight: 800;
+    color: #fff;
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+}
+/* Red Date for Dusted Cards - Nakuru Sunset Vibe */
+.dusted .date-morphism {
+    background: rgba(247, 41, 30, 0.2);
+    border: 1px solid rgba(249, 19, 6, 0.868);
+    color: #fffbfb;
+    box-shadow: 0 0 10px rgba(255, 59, 48, 0.2);
+}
+
+.status-label {
+    font-size: clamp(0.5rem, 1.2vw, 0.6rem);
+    font-weight: 900;
+    color: rgba(211, 251, 32, 0.92);
+    margin-top: clamp(2px, 1vw, 5px);
+    letter-spacing: clamp(0.5px, 0.2vw, 1.2px);
+    text-transform: uppercase;
+}
+
+.objective-text {
+    flex: 2;
+    font-weight: 700;
+    font-size: clamp(0.85rem, 2.2vw, 1.05rem);
+    color: #fff;
+    padding: 0 clamp(5px, 2vw, 12px);
+    line-height: 1.3;
+    word-wrap: break-word;
+}
+
+/* Actions & Ratings */
+.card-actions { display: flex; align-items: center; gap: clamp(10px, 3vw, 15px); }
+
+.ratings-box {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: clamp(15px, 4vw, 25px);
+    padding: clamp(4px, 1.5vw, 8px) clamp(10px, 2.5vw, 16px);
+    display: flex;
+    align-items: center;
+    gap: clamp(5px, 1.5vw, 10px);
+}
+
+.check-btn {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: clamp(32px, 8vw, 42px);
+    height: clamp(32px, 8vw, 42px);
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    cursor: pointer;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.calendar-morphism-vibe {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 90px; 
+    left: 10px;
+    width: clamp(240px, 40vw, 300px); 
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px) saturate(100%);
+    -webkit-backdrop-filter: blur(10px) saturate(100%);
+    border: 1px solid rgba(149, 149, 149, 0.12);
+    border-radius: 24px;
+    padding: 12px;
+    z-index: 1000;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    transform-origin: top left;
+    animation: popLeft 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popLeft {
+    from { opacity: 0; transform: scale(0.8) translateX(-10px); }
+    to { opacity: 1; transform: scale(1) translateX(0); }
+}
+
+.cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 0 5px;
+}
+
+/* Morphism Oval Nav Buttons */
+.cal-nav {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    width: 45px; /* Oval width */
+    height: 30px;
+    border-radius: 20px; /* Oval shape */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: 0.3s;
+}
+
+.cal-nav:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: clamp(4px, 1.5vw, 8px);
+}
+
+.cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.cal-weekdays div {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 50%; /* Circle wrap */
+    background: rgba(255, 255, 255, 0.05); /* Slight mophism tint */
+}
+
+/* M-F Purple Vibe */
+.cal-weekdays div:nth-child(2),
+.cal-weekdays div:nth-child(3),
+.cal-weekdays div:nth-child(4),
+.cal-weekdays div:nth-child(5),
+.cal-weekdays div:nth-child(6) {
+    background-color: #bf5af28e; 
+    border: 1px solid rgba(191, 90, 242, 0.3);
+}
+
+/* Weekend Black/Dark Vibe */
+.cal-weekdays div:nth-child(1),
+.cal-weekdays div:nth-child(7) {
+    color: #000;
+    background: rgba(255, 255, 255, 0.8); /* Solid-ish circle to make black text pop */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 50%; /* Pill/Circle vibe */
+    font-size: 12px;
+    color: white;
+    transition: 0.3s;
+    border: 1px solid rgba(222, 218, 218, 0.534)
+}
+
+.day:hover { background: rgba(255,255,255,0.2); }
+.day.selected { background: #00ff51; color: black; font-weight: bold; }
+.day.today { border: 1px solid #eaff00; }
+.day.empty { cursor: default; }
+.emoji-tray-vibe {
+    display: none;
+    position: absolute;
+    bottom: 85px; /* Sits right above the cast bar */
+    left: 10px;
+    width: clamp(260px, 45vw, 320px);
+    height: 200px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 12px;
+    z-index: 1100;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    transform-origin: bottom left;
+    animation: popLeft 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.emoji-grid-scroll {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Custom Scrollbar for the Mophosic Look */
+.emoji-grid-scroll::-webkit-scrollbar { width: 4px; }
+.emoji-grid-scroll::-webkit-scrollbar-thumb { 
+    background: rgba(255,255,255,0.2); 
+    border-radius: 10px; 
+}
+
+.emoji-grid-scroll span {
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.emoji-grid-scroll span:hover { transform: scale(1.2); }
+
+/* Ensure Twemoji images are crispy and sized right */
+.emoji-grid-scroll img.emoji {
+    width: 28px;
+    height: 28px;
+}
+
+.tray-category-header {
+    grid-column: span 6;
+    font-size: 9px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.4);
+    margin: 10px 0 5px 0;
+    letter-spacing: 1px;
+}
+
+.emoji-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; 
+    height: 32px;
+    background: none; 
+    border: none;   
+    padding: 0 2px;
+    cursor: pointer;
+    overflow: visible; 
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0.85; 
+}
+
+.emoji-btn:hover {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.1);
+}
+
+/* Make both the SVG and Twemoji images sit in the same floating spot */
+.emoji-btn svg, 
+.emoji-btn img.emoji {
+    width: clamp(20px, 4.5vw, 24px) !important;
+    height: auto !important;
+    transition: 0.2s;
+}
+
+/* Tight Double Bubble overlap for the floating emojis */
+.emoji-btn img.emoji:nth-child(2) {
+    margin-left: -12px; 
+    filter: drop-shadow(-2px 0 4px rgba(0,0,0,0.3));
+    z-index: 2;
+}
+
+.modal-overlay {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(15px);
+    display: none;
+    justify-content: center;
+    padding: clamp(10px, 3vw, 20px) 0;
+    margin-top: 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.881);
+}
+
+.rating-card {
+    position: relative;
+    width: 100%; 
+    max-width: 500px;
+    padding: clamp(15px, 4vw, 25px);
+    text-align: center;
+}
+
+/* Hardened Fluid Stars */
+.star-row {
+    display: flex;
+    justify-content: center;
+    gap: clamp(5px, 2vw, 12px);
+    margin: clamp(10px, 3vw, 20px) 0;
+    font-size: clamp(1.8rem, 7vw, 2.5rem);
+    cursor: pointer;
+}
+
+.close-modal {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(70, 69, 69, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.753);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-modal:hover {
+    color: #ff5252; /* Slight red tint on hover to signal 'close' */
+}
+
+.peer-display {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: clamp(10px, 3vw, 16px);
+    margin-top: 10px; 
+    margin-bottom: 20px;
+    font-size: clamp(0.7rem, 2vw, 0.85rem);
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgb(248, 248, 10);
+}
+
+.star {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: rgba(15, 15, 15, 0.306);
+    opacity: 0.9;
+}
+
+.star:hover {
+    transform: scale(1.2);
+}
+
+/* Color logic from your sketch */
+.star.active.rate-red { color: #ff5252; filter: drop-shadow(0 0 10px #ff525280); }
+.star.active.rate-green { color: #64f46c; filter: drop-shadow(0 0 10px #81c78480); }
+.star.active.rate-gold { color: #FFD700; filter: drop-shadow(0 0 15px #FFD70060); }
+
+#rating-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.8;
+}
+
+.confirm-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(88, 88, 88, 0.171);
+    color: white;
+    border: 1px solid rgba(127, 248, 113, 0.961);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.confirm-btn:hover {
+    background: white;
+    color: black;
+}

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photos | Coming Soon</title>
+    <link rel="stylesheet" href="/menu/photos.css">
+</head>
+<body>
+    <!-- Main Container -->
+<div class="photos-home-container">
+    
+    <!-- Top Navigation -->
+    <div class="header-top">
+        <button class="back-btn-pill">BACK</button>
+        <h1 class="library-title">BARONESS PHOTO LIBRARY</h1>
+    </div>
+
+    <!-- User Profiles (Overlapping Circles) -->
+    <div class="profile-stack">
+        <div class="user-circle p-profile">P</div>
+        <div class="user-circle b-profile">B</div>
+    </div>
+
+    <!-- Main Menu Buttons -->
+    <div class="hub-buttons">
+        <button id="open-manage" class="hub-btn">MANAGE PHOTOS</button>
+        <button id="open-gallery" class="hub-btn">GALLERY</button>
+    </div>
+
+    <!-- Recent Stacks Section -->
+    <div class="recent-vibe">
+        <h2 class="recent-title">RECENT :)</h2>
+        
+        <!-- Replace your .stacks-grid section with this -->
+<div class="stacks-grid">
+    <!-- April Stack -->
+    <div class="month-stack-container">
+        <div class="photo-stack">
+            <div class="stack-card card-3"></div>
+            <div class="stack-card card-2"></div>
+            <div class="stack-card card-1">
+                <img src="https://picsum.photos/400/500?random=1" alt="Recent">
+            </div>
+        </div>
+        <!-- Updated to Glass Pill -->
+        <div class="stack-label glass-pill">april 2026</div>
+    </div>
+
+    <!-- May Stack -->
+    <div class="month-stack-container">
+        <div class="photo-stack">
+            <div class="stack-card card-3"></div>
+            <div class="stack-card card-2"></div>
+            <div class="stack-card card-1">
+                <img src="https://picsum.photos/400/500?random=2" alt="Recent">
+            </div>
+        </div>
+        <div class="stack-label glass-pill">may 2026</div>
+    </div>
+</div>
+    </div>
+
+</div>
+
+<!-- STATE 2: MANAGE CENTER -->
+<section id="manage-center" class="ghost-manage-container">
+    
+    <!-- Top Left Home Button -->
+    <div class="manage-nav-top">
+        <button id="back-home" class="back-btn-pill">HOME</button>
+    </div>
+
+    <!-- Profile Area: Circle on left, Name/Button on right -->
+    <div class="admin-profile-section">
+        <div class="user-circle gold-border">P/B</div>
+        
+        <div class="admin-info-actions">
+            <h2 class="admin-name">Users(P/B), CENTER</h2>
+            <button class="upload-vibe-btn">new vibe :)</button>
+        </div>
+    </div>
+
+    <div class="manage-grid">
+        <!-- Photo Card 1 -->
+        <div class="admin-card">
+            <div class="card-header-info">
+                <span class="like-count">❤️ 3</span>
+            </div>
+            <div class="photo-frame">
+                <img src="https://picsum.photos/400/500?random=10" alt="Vibe">
+            </div>
+            <div class="card-footer">
+                <span class="upload-date">13 MAY 2026</span>
+                <button class="delete-btn">DELETE</button>
+            </div>
+        </div>
+
+        <!-- Photo Card 2 -->
+        <div class="admin-card">
+            <div class="card-header-info">
+                <span class="like-count">❤️ 1</span>
+            </div>
+            <div class="photo-frame">
+                <img src="https://picsum.photos/400/500?random=11" alt="Vibe">
+            </div>
+            <div class="card-footer">
+                <span class="upload-date">02 JULY 2026</span>
+                <button class="delete-btn">DELETE</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STATE 3: MAIN GALLERY -->
+<section id="main-gallery" class="ghost-manage-container">
+    <div class="gallery-header">
+        <button id="back-home-gallery" class="back-btn-pill">HOME</button>
+        <div class="header-main-row">
+        <div class="user-circle small gold-border">P</div>
+        <h1 class="gallery-title">BARONESS GALLERY</h1>
+        <div class="user-circle small gold-border">B</div>
+    </div>
+</div>
+    </div>
+
+    <div class="date-tag-container">
+        <span class="month-pill">MAY 2026</span>
+    </div>
+
+    <div class="manage-grid">
+        <!-- Photo Card with React Logic -->
+        <div class="vibe-card" onclick="expandPhoto(this)">
+            <div class="photo-frame">
+                <img src="/bucket/Image 18.jpg" alt="Vibe">
+                <button class="card-like-btn" onclick="toggleLike(event, this)">❤️</button>
+            </div>
+        </div>
+       <div class="vibe-card" onclick="expandPhoto(this)">
+            <div class="photo-frame">
+                <img src="/bucket/Image-13.jpg" alt="Vibe">
+                <button class="card-like-btn" onclick="toggleLike(event, this)">❤️</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FULL HD OVERLAY -->
+<div id="photo-overlay" class="photo-overlay hidden">
+    <button class="close-overlay" onclick="closeOverlay()">✕</button>
+    
+   <div class="hd-photo-container">
+    <!-- This wrapper keeps the bar locked to the image size -->
+    <div class="photo-and-bar-wrapper">
+        <img id="hd-image" src="" alt="Full HD Vibe">
+        
+        <div class="access-bar">
+            <!-- Download -->
+            <button class="access-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            </button>
+            <!-- React -->
+            <button class="access-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>
+            </button>
+            <!-- Like -->
+            <button class="access-btn" id="overlay-like">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            </button>
+            <!-- Share -->
+            <button class="access-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+</div>
+
+</body>
+<script src="photos.js"></script>
+</html>

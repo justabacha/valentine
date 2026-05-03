@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@echristian/edge-tts": "^0.0.14"
+  }
+}
