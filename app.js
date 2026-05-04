@@ -1,5 +1,5 @@
 /***************************************************************************/
-if ('serviceWorker' in navigator) {
+/*if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then((reg) => {
       console.log("Vibe Service Worker Registered 🦾");
@@ -16,44 +16,107 @@ if ('serviceWorker' in navigator) {
       });
     }).catch((err) => console.log("SW Failed:", err));
   });
-}
+}*/
 /***************************************************************************/
-// 1. Setup & Persistence Engine
-let userProfile = JSON.parse(localStorage.getItem('vibe_profile')) || null;
+// 1. Setup & Persistence Engine (Ghost Cloud Edition)
+const SB_URL = 'https://wckluymkbqxdmipzaiff.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indja2x1eW1rYnF4ZG1pcHphaWZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjM3NjAsImV4cCI6MjA5MzM5OTc2MH0.y3murBfcZtgluuPd_uFBut4Ky3Wl8WAHVCp-kA1u9sU';
+const _supabase = supabase.createClient(SB_URL, SB_KEY);
+
+let userProfile = null; 
+let pendingFile = null;
+let isSaving = false; 
 
 function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
     const reader = new FileReader();
     reader.onload = function() {
         const preview = document.getElementById('avatar-preview');
         preview.style.backgroundImage = `url(${reader.result})`;
-        preview.dataset.img = reader.result;
+        
+        // SUCCESS: Store the actual File object in our global variable
+        pendingFile = file; 
+        console.log("Oii! Raw file locked in variable:", pendingFile.name, pendingFile.size, "bytes");
     };
-    if (event.target.files && event.target.files[0]) {
-        reader.readAsDataURL(event.target.files[0]);
-    }
+    reader.readAsDataURL(file);
 }
 
-// Consolidated saveSetup - Handles both first-time and settings updates
-function saveSetup(choice) {
+async function saveSetup(choice) {
+    // 1. The Nerf Check
+    if (isSaving) return; 
+    isSaving = true;
+
     const nameInput = document.getElementById('user-name');
     const name = nameInput.value.trim();
-    const photo = document.getElementById('avatar-preview').dataset.img || "";
+    const file = pendingFile; 
+
+    // Visual feedback (Optional but clean, yoow)
+    const saveBtn = document.querySelector('.save-vibe-btn'); 
+    if (saveBtn) saveBtn.style.opacity = "0.5";
 
     if (!name) {
         nameInput.style.border = "1px solid #ff4d6d";
+        isSaving = false; // Unlock if they forgot their name
+        if (saveBtn) saveBtn.style.opacity = "1";
         return;
     }
 
-    userProfile = { 
-        displayName: name, 
-        avatar: photo, 
-        persona: choice 
-    };
-    
-    localStorage.setItem('vibe_profile', JSON.stringify(userProfile));
-    console.log("Vibe updated and adapted, blud! 🦾");
-    
-    launchApp(); // Immediately boot up the interface
+    try {
+        let finalAvatarUrl = userProfile?.avatar || "";
+
+        if (file) {
+            console.log("New vibe detected, prepping upload...");
+
+            // Housekeeping: Delete old one first
+            if (userProfile?.avatar && userProfile.avatar.includes('storage/v1/object/public')) {
+                const oldFileName = userProfile.avatar.split('/').pop();
+                await _supabase.storage.from('avatars').remove([oldFileName]);
+            }
+
+            // Upload new one
+            const fileName = `avatar_${Date.now()}_${file.name}`;
+            const { data: uploadData, error: uploadError } = await _supabase.storage
+                .from('avatars')
+                .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: false,
+                    contentType: file.type || 'image/jpeg'
+                });
+
+            if (uploadError) throw uploadError;
+
+            const { data: publicData } = _supabase.storage.from('avatars').getPublicUrl(fileName);
+            finalAvatarUrl = publicData.publicUrl;
+        }
+
+        // Sync to DB
+        const { error: dbError } = await _supabase
+            .from('profiles')
+            .upsert({ 
+                id: 'current_user', 
+                display_name: name, 
+                avatar_url: finalAvatarUrl, 
+                persona: choice,
+                updated_at: new Date()
+            });
+
+        if (dbError) throw dbError;
+
+        // Success state
+        userProfile = { displayName: name, avatar: finalAvatarUrl, persona: choice };
+        console.log("Vibe updated! Duplicate glitch nerfed. 🦾");
+        pendingFile = null;
+        launchApp(); 
+
+    } catch (err) {
+        console.error("Save process crashed, mate:", err.message);
+    } finally {
+        // ALWAYS unlock at the end
+        isSaving = false;
+        if (saveBtn) saveBtn.style.opacity = "1";
+    }
 }
 
 function launchApp() {
@@ -66,7 +129,10 @@ function launchApp() {
     // Apply Avatar to Header safely
     const headerAvatar = document.getElementById('header-avatar-circle');
     if (headerAvatar && userProfile && userProfile.avatar) {
-        headerAvatar.style.backgroundImage = `url(${userProfile.avatar})`;
+        // Force the background image and a console check
+console.log("Applying avatar to header:", userProfile.avatar);
+headerAvatar.style.backgroundImage = `url('${userProfile.avatar}')`;
+headerAvatar.style.backgroundSize = "cover";
     }
 
     // Initialize the Vibe
@@ -88,20 +154,33 @@ function launchApp() {
     }
 }
 
-window.onload = () => {
-    if (userProfile) {
+// --- Updated Loader for the snappy URL fetch ---
+document.addEventListener('DOMContentLoaded', async () => {
+    const { data, error } = await _supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', 'current_user')
+        .single();
+
+    if (data && !error) {
+        userProfile = {
+            displayName: data.display_name,
+            avatar: data.avatar_url, // Fetch the URL link
+            persona: data.persona
+        };
         document.getElementById('lockscreen').style.display = "none";
         launchApp();
     } else {
         document.getElementById('lockscreen').style.display = "flex";
     }
-};
+});
 
-function openSettings() {
+async function openSettings() {
     const lockscreen = document.getElementById('lockscreen');
     const nameInput = document.getElementById('user-name');
     const preview = document.getElementById('avatar-preview');
 
+    // Re-fetch to ensure we have the latest "Baroness" or "Phesty" state
     if (userProfile) {
         nameInput.value = userProfile.displayName;
         if (userProfile.avatar) {
@@ -260,14 +339,14 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
         document.getElementById('local-time').innerText = `${timeStr} HRS || ${dailySuggestion}`;
         document.getElementById('condition').innerText = "Temperature";
         
-        setTimeout(() => { announceVibe(); }, 1500);
+       // setTimeout(() => { announceVibe(); }, 1500);
     } catch (err) {
         console.error("Logic Error:", err);
         dailySuggestion = "Vibing Locally";
     }
 }
 
-async function announceVibe() {
+/*async function announceVibe() {
     const now = new Date();
     const dayName = now.toLocaleDateString('en-GB', { weekday: 'long' });
     const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
@@ -345,7 +424,7 @@ async function announceVibe() {
         utterance.rate = 1.0;
         window.speechSynthesis.speak(utterance);
     }
-}
+}*/
 
 function startVibeParade() {
     let origin = document.querySelector('.parade-origin');
