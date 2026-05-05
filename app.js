@@ -23,10 +23,92 @@ const SB_URL = 'https://wckluymkbqxdmipzaiff.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indja2x1eW1rYnF4ZG1pcHphaWZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjM3NjAsImV4cCI6MjA5MzM5OTc2MH0.y3murBfcZtgluuPd_uFBut4Ky3Wl8WAHVCp-kA1u9sU';
 const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
+let currentPersonaId = null; 
 let userProfile = null; 
 let pendingFile = null;
 let isSaving = false; 
 
+//--Gate Function--
+async function checkGate(persona) {
+    const passField = document.getElementById('gate-password');
+    const errorMsg = document.getElementById('gate-error');
+    const inputPass = passField.value;
+
+    if (!inputPass) {
+        errorMsg.innerHTML = "Type the secret key, yoow!";
+        return;
+    }
+
+    try {
+        // 1. Verify the key in Supabase
+        const { data, error } = await _supabase
+            .from('access_keys')
+            .select('secret_key')
+            .eq('id', persona)
+            .single();
+
+        if (error || data.secret_key !== inputPass) {
+            throw new Error("Invalid pass key, blud!");
+        }
+
+        // 2. Success! Lock in the Persona
+        currentPersonaId = `${persona}_official`;
+        console.log("Persona locked:", currentPersonaId);
+        localStorage.setItem('vibe_persona', persona); // Remember who they are
+        
+        // 3. Check if profile already exists
+        const { data: profile } = await _supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentPersonaId)
+            .single();
+
+        if (profile) {
+            // Fast-track to dashboard!
+            userProfile = { 
+                displayName: profile.display_name, 
+                avatar: profile.avatar_url, 
+                persona: profile.persona 
+            };
+            document.getElementById('gate-overlay').classList.add('hidden');
+            document.getElementById('lockscreen').style.display = "none";
+            launchApp();
+        } else {
+            // New user - show the profile settings
+            document.getElementById('gate-overlay').classList.add('hidden');
+            document.getElementById('lockscreen').style.display = "flex";
+            document.getElementById('lockscreen').style.opacity = "1";
+        }
+
+    } catch (err) {
+        errorMsg.innerHTML = `<span>ⓘ</span> ${err.message}`;
+        errorMsg.classList.add('blink-red');
+        passField.classList.add('blink-red');
+        setTimeout(() => {
+            errorMsg.classList.remove('blink-red');
+            passField.classList.remove('blink-red');
+        }, 2000);
+    }
+}
+function handleGateInput() {
+    const passField = document.getElementById('gate-password');
+    // Select both specific persona buttons
+    const buttons = document.querySelectorAll('.phesty-btn, .baroness-btn'); 
+    
+    if (passField.value.length >= 6) {
+        buttons.forEach(btn => {
+            btn.classList.add('ready-glow');
+            btn.style.pointerEvents = "auto"; // Ensure they are clickable
+            btn.style.opacity = "1";
+        });
+    } else {
+        buttons.forEach(btn => {
+            btn.classList.remove('ready-glow');
+            btn.style.opacity = "0.5";
+            btn.style.pointerEvents = "none"; // Lock them until pass is typed
+        });
+    }
+}
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -43,39 +125,53 @@ function handleImageUpload(event) {
     reader.readAsDataURL(file);
 }
 
-async function saveSetup(choice) {
-    // 1. The Nerf Check
+async function saveSetup() {
+    if (!currentPersonaId) {
+        console.error("No ID found! Redirecting to Gate...");
+        document.getElementById('gate-overlay').classList.remove('hidden');
+        document.getElementById('lockscreen').style.display = "none";
+        return;
+    }
+
+    // 1. Clever Logic: Automatically set Persona based on the Locked ID
+    const assignedPersona = currentPersonaId.includes('phesty') ? 'Phesty' : 'Baroness';
+    console.log(`Vibing in as: ${assignedPersona}`);
+
     if (isSaving) return; 
     isSaving = true;
 
     const nameInput = document.getElementById('user-name');
     const name = nameInput.value.trim();
-    const file = pendingFile; 
-
-    // Visual feedback (Optional but clean, yoow)
+    const file = pendingFile;
     const saveBtn = document.querySelector('.save-vibe-btn'); 
     if (saveBtn) saveBtn.style.opacity = "0.5";
 
     if (!name) {
         nameInput.style.border = "1px solid #ff4d6d";
-        isSaving = false; // Unlock if they forgot their name
+        isSaving = false; 
         if (saveBtn) saveBtn.style.opacity = "1";
         return;
     }
 
     try {
-        let finalAvatarUrl = userProfile?.avatar || "";
+       // Grab fresh avatar state to prevent wipes
+        let finalAvatarUrl = "";
+        const { data: existing } = await _supabase
+            .from('profiles')
+            .select('avatar_url')
+            .eq('id', currentPersonaId)
+            .single();
+            
+        finalAvatarUrl = existing?.avatar_url || "";
 
         if (file) {
             console.log("New vibe detected, prepping upload...");
-
-            // Housekeeping: Delete old one first
+            // Housekeeping: Delete old one
             if (userProfile?.avatar && userProfile.avatar.includes('storage/v1/object/public')) {
                 const oldFileName = userProfile.avatar.split('/').pop();
                 await _supabase.storage.from('avatars').remove([oldFileName]);
             }
 
-            // Upload new one
             const fileName = `avatar_${Date.now()}_${file.name}`;
             const { data: uploadData, error: uploadError } = await _supabase.storage
                 .from('avatars')
@@ -86,26 +182,25 @@ async function saveSetup(choice) {
                 });
 
             if (uploadError) throw uploadError;
-
             const { data: publicData } = _supabase.storage.from('avatars').getPublicUrl(fileName);
             finalAvatarUrl = publicData.publicUrl;
         }
 
-        // Sync to DB
+        // 2. Sync to DB using the SMART assignment
         const { error: dbError } = await _supabase
             .from('profiles')
             .upsert({ 
-                id: 'current_user', 
+                id: currentPersonaId, 
                 display_name: name, 
                 avatar_url: finalAvatarUrl, 
-                persona: choice,
+                persona: assignedPersona, // The clever part!
                 updated_at: new Date()
             });
 
         if (dbError) throw dbError;
 
-        // Success state
-        userProfile = { displayName: name, avatar: finalAvatarUrl, persona: choice };
+        // Update local state
+        userProfile = { displayName: name, avatar: finalAvatarUrl, persona: assignedPersona };
         console.log("Vibe updated! Duplicate glitch nerfed. 🦾");
         pendingFile = null;
         launchApp(); 
@@ -113,7 +208,6 @@ async function saveSetup(choice) {
     } catch (err) {
         console.error("Save process crashed, mate:", err.message);
     } finally {
-        // ALWAYS unlock at the end
         isSaving = false;
         if (saveBtn) saveBtn.style.opacity = "1";
     }
@@ -153,26 +247,32 @@ headerAvatar.style.backgroundSize = "cover";
         setDynamicGreeting('Phesty');
     }
 }
-
-// --- Updated Loader for the snappy URL fetch ---
+// --- Session Persistence Logic ---
 document.addEventListener('DOMContentLoaded', async () => {
-    const { data, error } = await _supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', 'current_user')
-        .single();
+    // 1. Hide everything by default to prevent "jumping"
+    document.getElementById('gate-overlay').classList.add('hidden');
+    document.getElementById('lockscreen').style.display = "none";
 
-    if (data && !error) {
-        userProfile = {
-            displayName: data.display_name,
-            avatar: data.avatar_url, // Fetch the URL link
-            persona: data.persona
-        };
-        document.getElementById('lockscreen').style.display = "none";
-        launchApp();
-    } else {
-        document.getElementById('lockscreen').style.display = "flex";
+    const savedPersona = localStorage.getItem('vibe_persona');
+
+    if (savedPersona) {
+        currentPersonaId = `${savedPersona}_official`;
+        const { data, error } = await _supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentPersonaId)
+            .single();
+
+        if (data && !error) {
+            userProfile = { displayName: data.display_name, avatar: data.avatar_url, persona: data.persona };
+            launchApp();
+            return;
+        }
     }
+    
+    // 2. If we reach here, no valid session exists -> Show ONLY the Gate
+    document.getElementById('gate-overlay').classList.remove('hidden');
+    console.log("No session. Gate is now active, blud.");
 });
 
 async function openSettings() {
@@ -180,12 +280,10 @@ async function openSettings() {
     const nameInput = document.getElementById('user-name');
     const preview = document.getElementById('avatar-preview');
 
-    // Re-fetch to ensure we have the latest "Baroness" or "Phesty" state
     if (userProfile) {
-        nameInput.value = userProfile.displayName;
+        nameInput.value = userProfile.displayName || "";
         if (userProfile.avatar) {
             preview.style.backgroundImage = `url(${userProfile.avatar})`;
-            preview.dataset.img = userProfile.avatar;
         }
     }
 
@@ -339,7 +437,7 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
         document.getElementById('local-time').innerText = `${timeStr} HRS || ${dailySuggestion}`;
         document.getElementById('condition').innerText = "Temperature";
         
-       // setTimeout(() => { announceVibe(); }, 1500);
+        setTimeout(() => { announceVibe(); }, 1500);
     } catch (err) {
         console.error("Logic Error:", err);
         dailySuggestion = "Vibing Locally";
