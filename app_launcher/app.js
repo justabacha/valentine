@@ -4,7 +4,7 @@ import { handleImageUpload, saveSetup, openSettings } from './profile.js';
 import { setDynamicGreeting, updateDate, generateVibe, startVibeParade, downloadCard } from './vibe.js';
 import { supabaseClient } from './config.js'; 
 
-// 🌍 expose functions to HTML (VERY IMPORTANT)
+// 🌍 expose functions to HTML
 window.checkGate = checkGate;
 window.handleGateInput = handleGateInput;
 window.handleImageUpload = handleImageUpload;
