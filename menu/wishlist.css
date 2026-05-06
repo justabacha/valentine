@@ -2,7 +2,7 @@
 body {
     margin: 0;
     padding: clamp(10px, 2vw, 20px) 0;
-    background: url('/bucket/Image-15.jpg') no-repeat center center fixed;
+    background: url('Image-15.jpg') no-repeat center center fixed;
     background-size: cover;
     min-height: 100vh;
     font-family: sans-serif;
