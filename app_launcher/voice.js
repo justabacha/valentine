@@ -1,4 +1,4 @@
-/*import { state } from './state.js';
+import { state } from './state.js';
 
 export async function announceVibe() {
     const now = new Date();
@@ -67,4 +67,4 @@ export async function announceVibe() {
         utterance.rate = 1.0;
         speechSynthesis.speak(utterance);
     }
-}*/
+}
