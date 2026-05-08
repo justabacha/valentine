@@ -7,19 +7,48 @@ import { supabaseClient } from '../../app_launcher/config.js';
 import { bindCalendar } from './wishlist-calendar.js';
 import { bindCastButton } from './wishlist-actions.js';
 import { renderGallery } from './wishlist-render.js';
-// Import the modules that attach global functions (promptEmoji, promptRating, etc.)
 import './wishlist-reactions.js';
 import './wishlist-ratings.js';
 
-// ==========================================
-// USER METADATA (will be populated from DB)
-// ==========================================
 export const wishlistUsers = {
     P: { name: 'Phesty', color: '#00ff51', dotClass: 'dot-p', avatarUrl: null },
     B: { name: 'Baroness', color: '#007aff', dotClass: 'dot-b', avatarUrl: null }
 };
 
 let currentUserKey = 'P'; // default
+
+// ==========================================
+// DETECT CURRENT USER FROM MULTIPLE SOURCES
+// ==========================================
+function detectCurrentUser() {
+    // 1. Try localStorage (set by main app after gate)
+    let savedPersona = localStorage.getItem('vibe_persona');
+    console.log('Raw vibe_persona from localStorage:', savedPersona);
+    
+    if (savedPersona) {
+        // Normalise to proper case
+        const normalized = savedPersona.toLowerCase();
+        if (normalized === 'baroness') {
+            console.log('✅ Detected Baroness from localStorage');
+            return 'B';
+        } else if (normalized === 'phesty') {
+            console.log('✅ Detected Phesty from localStorage');
+            return 'P';
+        }
+    }
+    
+    // 2. Fallback: try to read from main app's state (if loaded globally)
+    if (window.state?.userProfile?.persona) {
+        const mainPersona = window.state.userProfile.persona;
+        console.log('Falling back to window.state.userProfile.persona:', mainPersona);
+        if (mainPersona === 'Baroness') return 'B';
+        if (mainPersona === 'Phesty') return 'P';
+    }
+    
+    // 3. Last resort: default to Phesty and warn
+    console.warn('⚠️ Could not determine current user, defaulting to Phesty');
+    return 'P';
+}
 
 // ==========================================
 // FETCH BOTH PROFILES FROM SUPABASE
@@ -45,55 +74,43 @@ async function loadBothProfiles() {
         }
     }
 
-    // Determine current user from localStorage (set by main app)
-    const savedPersona = localStorage.getItem('vibe_persona');
-    if (savedPersona === 'Baroness') {
-        currentUserKey = 'B';
-    } else if (savedPersona === 'Phesty') {
-        currentUserKey = 'P';
-    } else {
-        console.warn('No vibe_persona in localStorage, defaulting to Phesty');
-    }
-
-    console.log('Profiles loaded:', wishlistUsers);
+    console.log('📸 Profiles loaded:', wishlistUsers);
 }
 
 // ==========================================
-// UPDATE BOTH AVATAR CIRCLES IN THE DOM
+// UPDATE BOTH AVATAR CIRCLES
 // ==========================================
 function syncAvatarsToUI() {
-    // Phesty's avatar
     const phestyEl = document.querySelector('.phesty-img');
     if (phestyEl && wishlistUsers.P.avatarUrl) {
         phestyEl.style.backgroundImage = `url(${wishlistUsers.P.avatarUrl})`;
         phestyEl.style.backgroundSize = "cover";
         phestyEl.innerText = "";
-    } else if (phestyEl && !wishlistUsers.P.avatarUrl) {
+    } else if (phestyEl) {
         phestyEl.style.backgroundImage = "";
         phestyEl.innerText = "P";
     }
 
-    // Baroness's avatar
     const baronessEl = document.querySelector('.bestie-img');
     if (baronessEl && wishlistUsers.B.avatarUrl) {
         baronessEl.style.backgroundImage = `url(${wishlistUsers.B.avatarUrl})`;
         baronessEl.style.backgroundSize = "cover";
         baronessEl.innerText = "";
-    } else if (baronessEl && !wishlistUsers.B.avatarUrl) {
+    } else if (baronessEl) {
         baronessEl.style.backgroundImage = "";
         baronessEl.innerText = "B";
     }
 }
 
 // ==========================================
-// GET CURRENT USER KEY (for other modules)
+// GET CURRENT USER KEY (exported)
 // ==========================================
 export function getCurrentUserKey() {
     return currentUserKey;
 }
 
 // ==========================================
-// UPDATE STATS (wish counter)
+// UPDATE STATS
 // ==========================================
 export function updateStats() {
     const total = wishlistState.wishes.length;
@@ -108,19 +125,24 @@ export function updateStats() {
 }
 
 // ==========================================
-// LOAD WISHES FROM DB
+// LOAD WISHES
 // ==========================================
 async function loadWishes() {
     wishlistState.wishes = await fetchWishes();
-    console.log('Wishlist synced:', wishlistState.wishes.length, 'items');
+    console.log('📋 Wishlist synced:', wishlistState.wishes.length, 'items');
 }
 
 // ==========================================
-// INITIALISE EVERYTHING
+// INITIALISE
 // ==========================================
 async function initWishlist() {
     await loadBothProfiles();
     syncAvatarsToUI();
+    
+    // Detect current user after profiles are loaded (in case we need names)
+    currentUserKey = detectCurrentUser();
+    console.log(`👤 Current user key: ${currentUserKey} (${currentUserKey === 'B' ? wishlistUsers.B.name : wishlistUsers.P.name})`);
+    
     await loadWishes();
     updateStats();
     renderGallery();
@@ -133,7 +155,7 @@ async function initWishlist() {
         },
         getCurrentUserKey
     );
-    console.log('Bedroom engine online 😭🔥 – Current user:', currentUserKey);
+    console.log('🔥 Bedroom engine online');
 }
 
 initWishlist();
