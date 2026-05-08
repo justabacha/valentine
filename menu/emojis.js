@@ -2,15 +2,14 @@
  * emojis.js
  * Curated for Phesty's Wishlist - WhatsApp/Apple Style
  */
-
-const LOCAL_EMOJIS = {
+window.LOCAL_EMOJIS = {
     "Expressions": [
         "😀", "😅", "😂", "🤣", "😊", "😇", "😉", "😍", 
         "🥰", "😋", "😎", "😏", "🥳", "🤩", "🫡", "🤔", 
         "🤫", "🫠", "🥺", "🥹", "🥲", "😤", "🤯", "🥶"
     ],
     "Acknowledgment": [
-        "✅", "👍", "🙌", "👏", "🤝", "💪", "👊", "🤞",
+        "✅", "👍", "🙌", "👏", "🤝", "💪", "👊", "🤞", 
         "💯", "🔥", "✨", "💎", "⭐", "🏆", "🎯", "🚀"
     ],
     "Events & Vibes": [

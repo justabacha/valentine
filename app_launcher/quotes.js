@@ -126,14 +126,14 @@ export const signatureLoops = [
         photo2: "bucket/Image-42.jpg"
     },
     {
-        part1: "Thank you for being you",
-        part2: "You inspire me to be my best self",
+        part1: "its an understatement calling u mah girlfriend",
+        part2: "you mah fighter u mah bestfriend",
         photo1: "bucket/Image-43.jpg",
         photo2: "bucket/Image-44.jpg"
     },
     {
-        part1: "Everything feels right :)",
-        part2: "Our friendship is a beautiful journey",
+        part1: "you always make me feel burtflies when u come around:)",
+        part2: "you make me know love is not the ansawer",
         photo1: "bucket/Image-45.jpg",
         photo2: "bucket/Image-46.jpg"
     },
