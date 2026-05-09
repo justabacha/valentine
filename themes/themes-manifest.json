@@ -1,0 +1,49 @@
+{
+  "categories": [
+    {
+      "type": "global",
+      "label": "GLOBAL THEMES",
+      "themes": [
+        { "name": "natural", "label": "Natural", "preview": "/bucket/Image-31.jpg" },
+        { "name": "blueray", "label": "Blueray", "preview": "/bucket/Image-24.jpg" },
+        { "name": "galaxy", "label": "Galaxy", "preview": "/bucket/Image-72.jpg" }
+      ]
+    },
+    {
+      "type": "wishlist",
+      "label": "WISHLIST THEMES",
+      "themes": [
+        { "name": "soft", "label": "Soft", "preview": "/bucket/Image-46.jpg" },
+        { "name": "baroness", "label": "Baroness", "preview": "/bucket/Image-20.jpg" },
+        { "name": "night", "label": "Night", "preview": "/bucket/Image-18.jpg" }
+      ]
+    },
+    {
+      "type": "messages",
+      "label": "MESSAGES THEMES",
+      "themes": [
+        { "name": "soft", "label": "Soft", "preview": "/bucket/Image-4.jpg" },
+        { "name": "baroness", "label": "Baroness", "preview": "/bucket/Image-68.jpg" },
+        { "name": "night", "label": "Night", "preview": "/bucket/Image-14.jpg" }
+      ]
+    },
+    {
+      "type": "jarvis",
+      "label": "JARVIS THEMES",
+      "themes": [
+        { "name": "soft", "label": "Soft", "preview": "/bucket/Image-29.jpg" },
+        { "name": "night", "label": "Night", "preview": "/bucket/Image-19.jpg" },
+        { "name": "cyber", "label": "Hacker", "preview": "/bucket/Image-66.jpg"}
+      ]
+    },
+    {
+      "type": "photos",
+      "label": "PHOTOS THEMES",
+      "themes": [
+        { "name": "soft", "label": "Soft", "preview": "/bucket/Image-61.jpg" },
+        { "name": "baroness", "label": "Baroness", "preview": "/bucket/Image-70.jpg" },
+        { "name": "night", "label": "Night", "preview": "/bucket/Image-10.jpg" }
+      ]
+    }
+  ]
+}

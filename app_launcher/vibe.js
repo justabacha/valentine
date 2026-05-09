@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { announceVibe } from './voice.js';
+/*import { announceVibe } from './voice.js';*/
 import { signatureLoops } from './quotes.js';
 
 //---Greeting Bank---

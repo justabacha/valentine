@@ -1,4 +1,6 @@
-/* settings.css - scoped to .settings-modal-overlay */
+/*======================================================================
+SETTINGS.CSS - scoped to .settings-modal-overlay 
+======================================================================*/
 .settings-modal-overlay {
     position: fixed;
     inset: 0;
@@ -203,7 +205,9 @@
     color: #fff;
 }
 
-/* Preview Overlay */
+/*==========================
+ Preview Gallery – Responsive & Centered Icons
+==========================*/
 .settings-modal-overlay .preview-overlay {
     position: fixed;
     inset: 0;
@@ -218,17 +222,21 @@
 
 .settings-modal-overlay .close-preview {
     position: absolute;
-    top: 12px;
-    right: 10px;
-    width: 40px;
-    height: 40px;
+    top: clamp(10px, 3vh, 20px);
+    right: clamp(10px, 3vw, 20px);
+    width: clamp(30px, 5vw, 40px);
+    height: clamp(30px, 5vw, 40px);
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(20, 207, 249, 0.381);
     color: white;
-    font-size: 24px;
+    font-size: clamp(20px, 4vw, 28px);
     cursor: pointer;
     z-index: 20025;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 
 .settings-modal-overlay .preview-scroller {
@@ -238,50 +246,58 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    perspective: 1200px;
 }
 
 .settings-modal-overlay .snippet-slide {
     position: absolute;
-    width: min(400px, 70vw);
     display: flex;
     flex-direction: column;
     align-items: center;
-    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
     pointer-events: none;
 }
 
+/* Center slide – hero */
 .settings-modal-overlay .snippet-slide.pos-center {
-    transform: translate3d(0, 0, 100px);
+    width: clamp(200px, 60vw, 480px);
+    transform: translateX(0) scale(1);
     opacity: 1;
-    z-index: 20021;
+    z-index: 10;
     pointer-events: auto;
 }
 
+/* Left slide – sits to the left of center, slightly scaled down */
 .settings-modal-overlay .snippet-slide.pos-left {
-    transform: translate3d(-55%, 0, -200px) rotateY(15deg);
-    opacity: 0.4;
-    filter: blur(8px);
-    z-index: 20019;
+    width: clamp(180px, 30vw, 300px);
+    transform: translateX(clamp(-90%, -25vw, -70%)) scale(0.85);
+    opacity: 0.8;
+    filter: blur(2px);
+    z-index: 5;
+    pointer-events: none;
 }
 
+/* Right slide – sits to the right of center */
 .settings-modal-overlay .snippet-slide.pos-right {
-    transform: translate3d(55%, 0, -200px) rotateY(-15deg);
-    opacity: 0.4;
-    filter: blur(8px);
-    z-index: 20019;
+    width: clamp(180px, 30vw, 300px);
+    transform: translateX(clamp(70%, 25vw, 90%)) scale(0.85);
+    opacity: 0.8;
+    filter: blur(2px);
+    z-index: 5;
+    pointer-events: none;
 }
 
+/* Images */
 .settings-modal-overlay .snippet-slide img {
-    width: 90%;
-    max-height: 70vh;
+    width: 100%;
     object-fit: cover;
     border-radius: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.854);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    aspect-ratio: 9 / 16;
+    max-height: 80vh;
 }
 
+/* Apply button – only on center slide */
 .settings-modal-overlay .apply-inside-btn {
     margin-top: 20px;
     padding: 12px 35px;
@@ -289,7 +305,7 @@
     background: #fff;
     color: #000;
     font-weight: 800;
-    border: none;
+    border: 1.5px solid rgb(237, 5, 117);
     cursor: pointer;
     font-size: 0.9rem;
     opacity: 0;
@@ -300,4 +316,39 @@
 .settings-modal-overlay .pos-center .apply-inside-btn {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* Preview navigation buttons (prev / next) */
+.settings-modal-overlay .preview-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-size: 2rem;
+    width: clamp(28px, 5vw, 40px);
+    height: clamp(28px, 5vw, 40px);
+    border-radius: 40%;
+    cursor: pointer;
+    z-index: 20030;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.settings-modal-overlay .preview-nav:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: translateY(-50%) scale(1.05);
+}
+
+.settings-modal-overlay .preview-nav.prev {
+    left: clamp(10px, 3vw, 30px);
+}
+
+.settings-modal-overlay .preview-nav.next {
+    right: clamp(10px, 3vw, 30px);
 }

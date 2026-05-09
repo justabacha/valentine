@@ -1,10 +1,43 @@
 // settings-ui.js
 import { state } from '../../app_launcher/state.js';
 
-export function buildSettingsHTML() {
+let cachedManifest = null;
+
+async function loadManifest() {
+    if (cachedManifest) return cachedManifest;
+    const res = await fetch('/themes/themes-manifest.json');
+    if (!res.ok) throw new Error('Failed to load themes manifest');
+    cachedManifest = await res.json();
+    return cachedManifest;
+}
+
+export async function buildSettingsHTML() {
+    const manifest = await loadManifest();
     const avatarUrl = state.userProfile?.avatar || '';
     const avatarInitial = state.userProfile?.persona?.charAt(0) || 'P';
     const avatarStyle = avatarUrl ? `background-image: url('${avatarUrl}'); background-size: cover;` : '';
+
+    let categoriesHTML = '';
+    for (const cat of manifest.categories) {
+        let themeCardsHTML = '';
+        for (const theme of cat.themes) {
+            const previewStyle = theme.preview ? `background-image: url('${theme.preview}'); background-size: cover; background-position: center;` : '';
+            themeCardsHTML += `
+                <div class="theme-item" data-theme-name="${theme.name}">
+                    <div class="theme-card" style="${previewStyle}"></div>
+                    <div class="label-pill">${theme.label}</div>
+                </div>
+            `;
+        }
+        categoriesHTML += `
+            <div class="category-wrapper">
+                <div class="category-pill">${cat.label}</div>
+                <div class="theme-grid" data-theme-type="${cat.type}">
+                    ${themeCardsHTML}
+                </div>
+            </div>
+        `;
+    }
 
     return `
     <div class="settings-modal-overlay" id="settings-modal-root">
@@ -13,46 +46,10 @@ export function buildSettingsHTML() {
                 <button class="back-pill" id="settings-close-btn">back</button>
                 <h1 class="main-title">SETTING CENTER</h1>
             </header>
-
             <div class="profile-section">
                 <div class="profile-circle" style="${avatarStyle}">${avatarUrl ? '' : avatarInitial}</div>
             </div>
-
-            <div class="category-wrapper">
-                <div class="category-pill">GLOBAL THEMES</div>
-                <div class="theme-grid" data-theme-type="global">
-                    <div class="theme-item" data-theme-name="natural">
-                        <div class="theme-card card-natural"></div>
-                        <div class="label-pill">Natural</div>
-                    </div>
-                    <div class="theme-item" data-theme-name="blueray">
-                        <div class="theme-card card-blueray"></div>
-                        <div class="label-pill">Blueray</div>
-                    </div>
-                    <div class="theme-item" data-theme-name="galaxy">
-                        <div class="theme-card card-galaxy"></div>
-                        <div class="label-pill">Galaxy</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="category-wrapper">
-                <div class="category-pill">WISHLIST THEMES</div>
-                <div class="theme-grid" data-theme-type="wishlist">
-                    <div class="theme-item" data-theme-name="soft">
-                        <div class="theme-card"></div>
-                        <div class="label-pill">Soft</div>
-                    </div>
-                    <div class="theme-item" data-theme-name="baroness">
-                        <div class="theme-card"></div>
-                        <div class="label-pill">Baroness</div>
-                    </div>
-                    <div class="theme-item" data-theme-name="night">
-                        <div class="theme-card"></div>
-                        <div class="label-pill">Night</div>
-                    </div>
-                </div>
-            </div>
+            ${categoriesHTML}
         </div>
 
         <!-- Choice Popup (hidden) -->
@@ -67,32 +64,23 @@ export function buildSettingsHTML() {
             </div>
         </div>
 
-        <!-- Full Screen Preview Gallery (hidden) -->
+        <!-- Preview Gallery (hidden) with navigation buttons -->
         <div id="preview-layer" class="preview-overlay hidden">
             <button class="close-preview" id="close-preview-btn">×</button>
+            <button class="preview-nav prev" id="preview-prev">‹</button>
+            <button class="preview-nav next" id="preview-next">›</button>
             <div class="preview-scroller" id="preview-scroller">
-                <div class="snippet-slide pos-left" data-view="home">
-                    <img src="/bucket/Image-14.jpg" alt="Home View">
-                    <button class="apply-inside-btn">Apply Theme</button>
-                </div>
-                <div class="snippet-slide pos-center" data-view="wishlist">
-                    <img src="/bucket/Image-51.jpg" alt="Wishlist View">
-                    <button class="apply-inside-btn">Apply Theme</button>
-                </div>
-                <div class="snippet-slide pos-right" data-view="messages">
-                    <img src="/bucket/Image-16.jpg" alt="Messages View">
-                    <button class="apply-inside-btn">Apply Theme</button>
-                </div>
+                <!-- Carousel slides will be injected by JS -->
             </div>
         </div>
     </div>
     `;
 }
 
-export function injectSettingsModal() {
+export async function injectSettingsModal() {
     const existing = document.getElementById('settings-modal-root');
     if (existing) existing.remove();
-    const modalHTML = buildSettingsHTML();
+    const modalHTML = await buildSettingsHTML();
     const div = document.createElement('div');
     div.innerHTML = modalHTML;
     document.body.appendChild(div.firstElementChild);
