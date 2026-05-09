@@ -6,8 +6,9 @@
     <title>Signature Loops | Phesty & Baroness</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ff4d6d">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="menu.css">
+    <link rel="stylesheet" href="/settings/themes/style.css">
+    <link rel="stylesheet" href="/next/menu.css">
+    <link rel="stylesheet" href="/settings/settings.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://kit.fontawesome.com/your-font-kit.js" crossorigin="anonymous"></script> <!-- Optional for icons, using outlined SVGs below -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -70,26 +71,41 @@
             </div>
             
             <div class="command-box">
-                <div id="local-time">14:00Hrs</div>
+    <div id="local-time">14:00Hrs</div>
 
-                <div class="weather-circles-container">
-                    <div class="glass-bubble temp-bubble">
-                        <span class="icon">🌡️</span>
-                        <div class="bubble-content">
-                            <span id="temp">27°C</span>
-                            <span id="condition">Vibing...</span>
-                        </div>
-                    </div>
-                    
-                    <div class="glass-bubble humid-bubble">
-                        <span class="icon">🫧</span>
-                        <div class="bubble-content">
-                            <span id="humidity">34%</span>
-                            <span class="label">Humidity</span>
-                        </div>
-                    </div>
+    <!-- This wrapper creates the left/right split -->
+    <div class="header-action-lane">
+        
+        <!-- Left Side: Your original glass bubbles stay put -->
+        <div class="weather-circles-container">
+            <div class="glass-bubble temp-bubble">
+                <span class="icon">🌡️</span>
+                <div class="bubble-content">
+                    <span id="temp">27°C</span>
+                    <span id="condition">Vibing...</span>
                 </div>
             </div>
+            
+            <div class="glass-bubble humid-bubble">
+                <span class="icon">🫧</span>
+                <div class="bubble-content">
+                    <span id="humidity">34%</span>
+                    <span class="label">Humidity</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: The real SVG Settings Icon -->
+         <div class="settings-trigger-wrapper" id="settings-gear-trigger">
+         <svg class="settings-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span class="settings-label">Settings</span>
+        </div>
+
+    </div>
+</div>
         </header>
 
         <div class="preview-area">
@@ -121,7 +137,7 @@
     <!--BARONESS MENU LIST-->
     <nav id="vibe-menu-panel">
     <!-- MESSAGES: Apple Messages/iMessage Style -->
-    <div class="vibe-menu-item" onclick="location.href='messages.html'">
+    <div class="vibe-menu-item" onclick="location.href='/menu/messages.html'">
         <div class="vibe-circle">
             <img src="https://img.icons8.com/color/48/imessage.png" width="30" alt="Messages">
         </div>
@@ -129,7 +145,7 @@
     </div>
     
     <!-- J.A.R.V.I.S: Gemini/AI Sparkle Style -->
-    <div class="vibe-menu-item" onclick="location.href='jarvis.html'">
+    <div class="vibe-menu-item" onclick="location.href='/menu/jarvis.html'">
         <div class="vibe-circle">
             <img src="https://img.icons8.com/fluency/48/artificial-intelligence.png" width="30" alt="JARVIS">
         </div>
@@ -156,7 +172,7 @@
 
   <!-- Core Configuration First -->
     <script type="module" src="./app_launcher/app.js"></script>
-    <script src="menu.js"></script>
+    <script src="/next/menu.js"></script>
 
 </body>
 </html>

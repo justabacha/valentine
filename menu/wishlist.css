@@ -82,13 +82,14 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    background-position: center;
     font-weight: 900;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(5px);
 }
 
-.phesty-img { border: 3px solid #34C759; margin-right: -12px; position: relative; z-index: 2; color: #fff; }
-.bestie-img { border: 3px solid #4285F4; color: #fff; }
+.phesty-img { border: 2px solid #34C759; margin-right: -12px; position: relative; z-index: 2; color: #fff; }
+.bestie-img { border: 2px solid #4285F4; color: #fff; }
 
 .stat-capsule {
     background: rgba(255, 255, 255, 0.1);

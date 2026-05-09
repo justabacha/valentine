@@ -3,6 +3,7 @@ import { checkGate, handleGateInput } from './auth.js';
 import { handleImageUpload, saveSetup, openSettings } from './profile.js';
 import { setDynamicGreeting, updateDate, generateVibe, startVibeParade, downloadCard } from './vibe.js';
 import { supabaseClient } from './config.js'; 
+import { initSettings, loadSavedTheme } from '../settings/settings.js';
 
 // 🌍 expose functions to HTML
 window.checkGate = checkGate;
@@ -115,4 +116,10 @@ if (installBtn) {
 const closeBtn = document.getElementById('close-modal');
 if (closeBtn) {
     closeBtn.addEventListener('click', () => { installModal.style.display = 'none'; });
+}
+
+const gearTrigger = document.getElementById('settings-gear-trigger');
+if (gearTrigger) {
+    initSettings(gearTrigger);
+    loadSavedTheme();
 }
