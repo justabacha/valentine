@@ -91,7 +91,7 @@ body {
     color: white;
 }
 
-.phesty-img { border: 2px solid #34C759; margin-right: -12px; position: relative; z-index: 2; color: #fff; }
+.phesty-img { border: 2px solid #34C759; margin-right: -12px; margin-bottom: 7px; position: relative; z-index: 2; color: #fff; }
 .bestie-img { border: 2px solid #4285F4; color: #fff; }
 
 .stat-capsule {
@@ -483,8 +483,8 @@ body {
 
 /* Tight Double Bubble overlap for the floating emojis */
 .emoji-btn img.emoji:nth-child(2) {
-    margin-left: -12px; 
-    filter: drop-shadow(-2px 0 4px rgba(0,0,0,0.3));
+    margin-left: -6px; 
+    margin-bottom: 8px;
     z-index: 2;
 }
 

@@ -173,6 +173,9 @@
   <!-- Core Configuration First -->
     <script type="module" src="./app_launcher/app.js"></script>
     <script src="/next/menu.js"></script>
-
+    <script type="module">
+    import { loadSavedTheme } from '/settings/settings.js';
+    loadSavedTheme();
+    </script>
 </body>
 </html>

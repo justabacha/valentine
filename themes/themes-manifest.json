@@ -22,7 +22,7 @@
       "type": "messages",
       "label": "MESSAGES THEMES",
       "themes": [
-        { "name": "soft", "label": "Soft", "preview": "/bucket/Image-4.jpg" },
+        { "name": "soft", "label": "Soft", "preview": "/bucket/Image-44.jpg" },
         { "name": "baroness", "label": "Baroness", "preview": "/bucket/Image-68.jpg" },
         { "name": "night", "label": "Night", "preview": "/bucket/Image-14.jpg" }
       ]

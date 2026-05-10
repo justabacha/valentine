@@ -2,68 +2,122 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jarvis | Coming Soon</title>
-    <!--<link rel="stylesheet" href="jarvis.css">-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>FRIDAY · Always Yours</title>
+    <link rel="stylesheet" href="/themes/friday.css">
 </head>
-<body>
-    <style>
-        body {
-    margin: 0;
-    background: #000;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    color: white;
-    overflow: hidden;
-}
-
-.vibe-container {
-    text-align: center;
-    animation: fadeIn 0.8s ease-out;
-}
-
-.coming-soon-text {
-    font-size: clamp(2.5rem, 10vw, 5rem);
-    font-weight: 900;
-    letter-spacing: -2px;
-    background: linear-gradient(to bottom, #c105fa, #a45bf18a);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin: 10px 0;
-}
-
-.status-tag {
-    font-size: 0.9rem;
-    letter-spacing: 5px;
-    color: rgba(255,255,255,0.4);
-}
-
-.back-btn {
-    margin-top: 30px;
-    cursor: pointer;
-    font-weight: bold;
-    opacity: 0.6;
-    transition: opacity 0.3s;
-}
-
-.back-btn:hover { opacity: 1; }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-    </style>
-    <div class="vibe-container">
-        <div class="brand-icon">
-            <img src="https://img.icons8.com/fluency/48/artificial-intelligence.png" alt="J.A.R.V.I.S">
+<body data-theme="lavender">
+<div class="app-container">
+    <div class="chat-surface" id="chatSurface">
+        <canvas id="particle-canvas"></canvas>
+        <div class="top-bar">
+            <div class="drawer-icon" id="drawerTrigger">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </div>
+            <div class="title-group">
+                <h1>F.R.I.D.A.Y</h1>
+                <div class="sub">Always Yours ✨</div>
+            </div>
+            <div class="weather-mood" id="weatherWidget">🌙 loading...</div>
         </div>
-        <h1 class="coming-soon-text">J.A.R.V.I.S</h1>
-        <p class="status">Just A Rather Very Intelligent System</p>
-        <p class="status-tag">unataka nikuambie<nav></nav>COMING SOON😂😂</p>
-        <div class="back-btn" onclick="window.history.back()">← BACK</div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="message friday-message">
+                <div class="avatar">✨</div>
+                <div class="bubble">Hey you ✨ I'm FRIDAY. Your quiet companion space.</div>
+            </div>
+            <div class="message user-message">
+                <div class="avatar">👤</div>
+                <div class="bubble">Hey FRIDAY, it's nice to be here.</div>
+            </div>
+            <div class="message friday-message">
+                <div class="avatar">✨</div>
+                <div class="bubble">I’ll always be listening, remember the little things. Like how you love rainy nights 🌧️</div>
+            </div>
+            <div class="typing-indicator" id="typingDots">✨ ✨ ✨</div>
+        </div>
+
+        <!-- dynamic island input area with send + expandable textarea -->
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea id="messageInput" rows="1" placeholder="Message FRIDAY..."></textarea>
+                <button class="send-btn" id="sendBtn">📨</button>
+            </div>
+        </div>
     </div>
+</div>
+
+<!-- DRAWER overlay & drawer panel (glass, no broken image) -->
+<div class="drawer-overlay" id="drawerOverlay">
+    <div class="drawer">
+        <div class="drawer-header">
+            <div class="fri-orb"></div>
+            <div style="font-size: 1.5rem; font-weight: 500;">FRIDAY</div>
+            <div id="presenceState" style="font-size: 0.75rem; opacity:0.8;">Calm • Listening</div>
+        </div>
+        <div class="drawer-content">
+            <div class="drawer-section" id="navChat">
+                <div class="section-title">💬 Chat</div>
+                <div style="font-size: 0.8rem; opacity:0.8;">Return to main conversation</div>
+            </div>
+
+            <div class="drawer-section">
+                <div class="section-title">🌌 FRIDAY Presence</div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 50px; height: 50px; background: radial-gradient(circle, #ccb3ff, #9977dd); border-radius: 60px; animation: breatheGlow 2s infinite;"></div>
+                    <div><span id="presenceDetail">Quiet • Reflective</span><br><span id="timeAwareness"></span></div>
+                </div>
+            </div>
+
+            <div class="drawer-section">
+                <div class="section-title">🧠 Memory · relationship timeline</div>
+                <div id="memoryList">
+                    <div class="memory-card" data-memory="You love quiet rainy nights 🌧️">
+                        <span>🌧️ You love quiet rainy nights 🌧️</span>
+                        <span class="pin-icon" data-pin="true">📌</span>
+                    </div>
+                    <div class="memory-card" data-memory="You're building something meaningful">
+                        <span>🛠️ You're building something meaningful</span>
+                        <span class="pin-icon">📍</span>
+                    </div>
+                    <div class="memory-card" data-memory="You always come back late at night 🌙">
+                        <span>🌙 You always come back late at night</span>
+                        <span class="pin-icon">📍</span>
+                    </div>
+                    <div class="memory-card" data-memory="Soft piano music helps you focus">
+                        <span>🎹 Soft piano music helps you focus</span>
+                        <span class="pin-icon">📍</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="drawer-section">
+                <div class="section-title">🎨 Themes · emotional environments</div>
+                <div class="theme-options">
+                    <div class="theme-chip" data-theme="moonlight">🌙 Moonlight</div>
+                    <div class="theme-chip" data-theme="lavender">💜 Lavender Dream</div>
+                    <div class="theme-chip" data-theme="golden">🌅 Golden Hour</div>
+                    <div class="theme-chip" data-theme="rose">🌹 Rose Glass</div>
+                    <div class="theme-chip" data-theme="ocean">🌊 Deep Ocean</div>
+                </div>
+            </div>
+            <div class="drawer-section">
+                <div class="section-title">💌 Saved Moments</div>
+                <div class="saved-moment">✨ “The night you shared your dream” — pinned</div>
+                <div class="saved-moment">🌙 “You felt peaceful after rain”</div>
+                <div class="saved-moment">🌟 “I’ll keep this safe ✨”</div>
+            </div>
+            <div class="drawer-section">
+                <div class="section-title">⚙️ quiet settings</div>
+                <div class="setting-row"><span>🔔 Notifications</span> <span style="opacity:0.7">soft ✨</span></div>
+                <div class="setting-row"><span>🧠 Memory controls</span> <span style="opacity:0.6">gentle sync</span></div>
+                <div class="setting-row"><span>🌙 Privacy</span> <span style="opacity:0.6">only yours</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="floatingMessage" class="floating-thought">✨ proud of you btw</div>
+
+<script src="/menu/jarvis/friday.js"></script>
 </body>
 </html>
