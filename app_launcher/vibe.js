@@ -151,9 +151,9 @@ export async function updateWeatherLogic(lat, lon, forcedCity = null) {
         document.getElementById('condition').innerText = "Temperature";
 
         // 🎙️ VOICE TRIGGER (THIS WAS MISSING)
-       setTimeout(() => {
+       /*setTimeout(() => {
             announceVibe();
-        }, 1500);
+        }, 1500);*/
 
     } catch (err) {
         console.error("Logic Error:", err);

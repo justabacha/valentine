@@ -1,6 +1,6 @@
-
-        /*======================================================================
+ /*======================================================================
          FRIDAY — FULLSCREEN | FLOATING INPUT | ROSE BOW CORNERS
+         FIXED: chat area fills remaining space, uses clamp() for responsive comfort
         ======================================================================*/
         * {
             margin: 0;
@@ -13,21 +13,22 @@
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', sans-serif;
             background: #0a0a1a;
             height: 100vh;
+            height: 100dvh; /* dynamic viewport for mobile */
             width: 100vw;
             overflow: hidden;
             transition: background 0.3s ease;
         }
 
-        /*+++FULLSCREEN APP — NO CARD, NO BORDERS */
+        /* FULLSCREEN APP — NO CARD, NO BORDERS */
         .app-container {
             width: 100%;
-            height: 100vh;
+            height: 100%;
             background: transparent;
             position: relative;
             overflow: hidden;
         }
 
-        /*++MAIN SURFACE (chat layer) */
+        /* MAIN SURFACE (chat layer) */
         .chat-surface {
             width: 100%;
             height: 100%;
@@ -39,7 +40,7 @@
             flex-direction: column;
         }
 
-        /*+particle canvas (subtle dust/stars) */
+        /* particle canvas (subtle dust/stars) */
         #particle-canvas {
             position: absolute;
             top: 0;
@@ -50,13 +51,13 @@
             z-index: 1;
         }
 
-        /*+content above canvas */
+        /* content above canvas */
         .top-bar, .chat-area, .input-area {
             position: relative;
             z-index: 2;
         }
 
-        /*+dynamic theme variables */
+        /* dynamic theme variables */
         :root {
             --bg-gradient: linear-gradient(145deg, #1e1a3a 0%, #0f0c24 100%);
             --bubble-user: rgba(255, 255, 255, 0.1);
@@ -67,21 +68,19 @@
             --drawer-bg: rgba(20, 15, 40, 0.85);
         }
 
-        /*****************
-        +++THEMES+++
-        *****************/
+        /* THEMES */
         body[data-theme="moonlight"] .chat-surface { --bg-gradient: linear-gradient(145deg, #0B1120 0%, #1A1F2E 100%); --bubble-friday: linear-gradient(135deg, #6c81b5, #4a5b8c); --glow-color: #86a0dd88; }
         body[data-theme="lavender"] .chat-surface { --bg-gradient: linear-gradient(145deg, #211d40 0%, #2e2a5a 100%); --bubble-friday: linear-gradient(135deg, #bda8ff, #9a7bdf); --glow-color: #c6abffaa; }
         body[data-theme="golden"] .chat-surface { --bg-gradient: linear-gradient(145deg, #2f241b 0%, #4a3727 100%); --bubble-friday: linear-gradient(135deg, #efc48c, #d9a066); --glow-color: #f7cd7eaa; }
         body[data-theme="rose"] .chat-surface { --bg-gradient: linear-gradient(145deg, #3f1e2e 0%, #2f1423 100%); --bubble-friday: linear-gradient(135deg, #f5adca, #dd88aa); --glow-color: #ffb7d0aa; }
         body[data-theme="ocean"] .chat-surface { --bg-gradient: linear-gradient(145deg, #0a2a2f 0%, #0a1d28 100%); --bubble-friday: linear-gradient(135deg, #63bfc7, #3699a3); --glow-color: #70d0ddaa; }
 
-        /*--- HEADER (thin but elegant) --- */
+        /* HEADER (thin but elegant) — clamped padding */
         .top-bar {
             display: flex;
             align-items: center;
-            padding: 14px 20px 10px 5px;
-            gap: 12px;
+            padding: clamp(8px, 3vh, 10px) clamp(8px, 4vw, 10px) clamp(6px, 2vh, 10px) clamp(8px, 3vw, 2px);
+            gap: clamp(8px, 2vw, 12px);
             backdrop-filter: blur(12px);
             flex-shrink: 0;
         }
@@ -97,6 +96,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             backdrop-filter: blur(5px);
+            flex-shrink: 0;
         }
 
         .drawer-icon:hover {
@@ -105,10 +105,11 @@
 
         .title-group {
             flex: 1;
+            min-width: 0;
         }
 
         .title-group h1 {
-            font-size: 1.5rem;
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
             font-weight: 500;
             letter-spacing: -0.2px;
             background: linear-gradient(135deg, #fff, #cbbaff);
@@ -119,37 +120,40 @@
         }
 
         .sub {
-            font-size: 0.65rem;
+            font-size: clamp(0.6rem, 2.5vw, 0.7rem);
             opacity: 0.7;
             letter-spacing: 0.2px;
             color: var(--text-soft);
+            white-space: nowrap;
         }
 
         .weather-mood {
-            font-size: 0.7rem;
+            font-size: clamp(0.65rem, 2.5vw, 0.75rem);
             background: rgba(255,255,240,0.1);
-            padding: 5px 12px;
+            padding: 5px clamp(8px, 2vw, 12px);
             border-radius: 40px;
             backdrop-filter: blur(4px);
             color: #f0eaff;
             white-space: nowrap;
+            flex-shrink: 0;
         }
 
-        /* ---SCROLLABLE CHAT AREA (only this scrolls) --- */
+        /* CHAT AREA — FIX: takes all remaining space, scrollable only here */
         .chat-area {
-            flex: 1;
+            flex: 1 1 0%;
+            min-height: 0;  /* essential for flex children to shrink */
             overflow-y: auto;
-            padding: 20px 18px 16px 18px;
+            padding: clamp(12px, 3vh, 20px) clamp(12px, 4vw, 18px) clamp(12px, 3vh, 16px) clamp(12px, 4vw, 18px);
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: clamp(12px, 2vh, 16px);
             scroll-behavior: smooth;
         }
 
-        /*+++MESSAGES — touching avatar style (gap reduced) */
+        /* MESSAGES — touching avatar style */
         .message {
             display: flex;
-            gap: 1px;  /* minimal gap so bubble touches avatar visually */
+            gap: 1px;
             max-width: 88%;
             animation: fadeSlideUp 0.35s ease-out;
             align-items: flex-start;
@@ -177,53 +181,56 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
-        /*+++BUBBLE STYLES + ROSE BOW CORNER */
-        .bubble {
-            padding: 10px 10px;
-            margin-top: 15px;
-            font-size: 0.92rem;
-            line-height: 1.45;
-            color: var(--text-primary);
-            backdrop-filter: blur(12px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            position: relative;
-            word-break: break-word;
-        }
+        /* BUBBLE STYLES + ROSE BOW CORNER */
+       .bubble {
+    padding: clamp(8px, 1.5vh, 10px) clamp(10px, 3vw, 14px);
+    margin-top: 12px;
+    font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+    line-height: 1.45;
+    color: var(--text-primary);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    position: relative;
+    word-break: break-word;
+    overflow: visible; /* ensure pseudo-elements aren't clipped */
+}
 
-        /*++User bubble – rose bow on top-left corner */
-        .user-message .bubble {
-            background: var(--bubble-user);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 24px 8px 24px 24px;
-        }
-        .user-message .bubble::before {
-            content: "🏵️";
-            position: absolute;
-            top: -7px;
-            left: -5px;
-            font-size: 1.1rem;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-            pointer-events: none;
-            text-shadow: 0 0 2px #ffb7c5;
-        }
+/* User bubble – rose bow top-left */
+.user-message .bubble {
+    background: var(--bubble-user);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 24px 8px 24px 24px;
+}
+.user-message .bubble::before {
+    content: "🏵️";
+    position: absolute;
+    top: -0.3em;
+    left: -0.3em;
+    font-size: clamp(1rem, 4vw, 1.2rem);
+    line-height: 1;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+    pointer-events: none;
+    text-shadow: 0 0 2px #ffb7c5;
+}
 
-        /*++FRIDAY bubble – rose bow on top-right corner */
-        .friday-message .bubble {
-            background: var(--bubble-friday);
-            border-radius: 8px 24px 24px 24px;
-            box-shadow: 0 0 12px var(--glow-color);
-            animation: softShimmer 2.5s infinite;
-        }
-        .friday-message .bubble::after {
-            content: "🏵️";
-            position: absolute;
-            top: -8px;
-            right: -9px;
-            font-size: 1.3rem;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-            pointer-events: none;
-            text-shadow: 0 0 2px #ffcfdf;
-        }
+/* FRIDAY bubble – rose bow top-right */
+.friday-message .bubble {
+    background: var(--bubble-friday);
+    border-radius: 8px 24px 24px 24px;
+    box-shadow: 0 0 12px var(--glow-color);
+    animation: softShimmer 2.5s infinite;
+}
+.friday-message .bubble::after {
+    content: "🏵️";
+    position: absolute;
+    top: -0.13em;
+    right: -0.2em;
+    font-size: clamp(1rem, 4vw, 1.3rem);
+    line-height: 1;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+    pointer-events: none;
+    text-shadow: 0 0 2px #ffcfdf;
+}
 
         @keyframes softShimmer {
             0% { box-shadow: 0 0 4px var(--glow-color); }
@@ -231,14 +238,14 @@
             100% { box-shadow: 0 0 4px var(--glow-color); }
         }
 
-        /*+typing indicator (gentle) */
+        /* typing indicator */
         .typing-indicator {
             display: flex;
             gap: 4px;
             align-items: center;
             padding-left: 48px;
             margin-top: 2px;
-            font-size: 1.25rem;
+            font-size: clamp(1rem, 4vw, 1.3rem);
             letter-spacing: 3px;
             animation: gentlePulse 1.8s infinite;
             opacity: 0.8;
@@ -248,10 +255,10 @@
             100% { opacity: 1; letter-spacing: 5px; }
         }
 
-        /*---- DYNAMIC ISLAND INPUT (floating + expandable) ---- */
+        /* DYNAMIC ISLAND INPUT (floating + expandable) */
         .input-area {
             flex-shrink: 0;
-            padding: 12px 20px 24px 20px;
+            padding: clamp(8px, 2vh, 12px) clamp(16px, 5vw, 20px) clamp(16px, 4vh, 24px) clamp(16px, 5vw, 20px);
             background: transparent;
             position: relative;
             z-index: 3;
@@ -275,13 +282,13 @@
             background: rgba(20, 18, 45, 0.8);
         }
 
-        /*++expandable textarea */
+        /* expandable textarea */
         .input-wrapper textarea {
             flex: 1;
             background: transparent;
             border: none;
             color: white;
-            font-size: 0.95rem;
+            font-size: clamp(0.85rem, 3.5vw, 0.95rem);
             font-family: inherit;
             resize: none;
             outline: none;
@@ -319,7 +326,7 @@
             background: rgba(210, 180, 255, 0.5);
         }
 
-        /*+++SIDE DRAWER — elegant glass */
+        /* SIDE DRAWER — elegant glass */
         .drawer-overlay {
             position: fixed;
             top: 0;
@@ -345,9 +352,11 @@
             max-width: 340px;
             height: 100%;
             color: whitesmoke;
-            background: url("/bucket/Image-52.jpg")no-repeat center center fixed ;
+            background: rgba(18, 15, 32, 0.92);
+            background-image: url("/bucket/Image-52.jpg");
             background-position: center;
             background-size: cover;
+            background-blend-mode:exclusion;
             backdrop-filter: blur(24px);
             border-radius: 0 32px 32px 0;
             box-shadow: 12px 0 40px rgba(0, 0, 0, 0.4);
@@ -362,7 +371,7 @@
             transform: translateX(0);
         }
         .drawer-header {
-            padding: 10px 12px 8px;
+            padding: clamp(8px, 4vh, 15px) clamp(12px, 4vw, 18px) 8px clamp(12px, 4vw, 18px);
         }
         .fri-orb {
             width: 48px;
@@ -379,7 +388,7 @@
         .drawer-content {
             flex: 1;
             overflow-y: auto;
-            padding: 14px 16px 30px;
+            padding: clamp(12px, 3vh, 20px) clamp(12px, 4vw, 18px) 30px clamp(12px, 4vw, 18px);
             display: flex;
             flex-direction: column;
             gap: 24px;
@@ -441,7 +450,7 @@
             font-size: 0.85rem;
         }
 
-        /*+++floating thought (soft notifications)*/
+        /* floating thought (soft notifications) */
         .floating-thought {
             position: fixed;
             bottom: 100px;
