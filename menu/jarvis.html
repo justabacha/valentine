@@ -57,9 +57,18 @@
         </div>
         <div class="drawer-content">
             <div class="drawer-section" id="navChat">
-                <div class="section-title">💬 Chat</div>
-                <div style="font-size: 0.8rem; opacity:0.8;">Return to main conversation</div>
-            </div>
+    <div class="section-title">✨ Companion Modes</div>
+    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+        <div id="returnToChat" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <span>💬</span> <span style="font-size: 0.9rem;">Chat</span>
+            <span style="font-size: 0.7rem; opacity: 0.6; margin-left: auto;">↺</span>
+        </div>
+        <div id="goToVoice" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <span>🎙️</span> <span style="font-size: 0.9rem;">Voice Chat</span>
+            <span style="font-size: 0.7rem; opacity: 0.6; margin-left: auto;">→</span>
+        </div>
+    </div>
+</div>
 
             <div class="drawer-section">
                 <div class="section-title">🌌 FRIDAY Presence</div>
@@ -117,6 +126,52 @@
     </div>
 </div>
 <div id="floatingMessage" class="floating-thought">✨ proud of you btw</div>
+
+<!-- FRIDAY Cinematic HUD Modal (Stark style) -->
+<div id="fridayModal" class="friday-modal">
+    <div class="hud-modal-container">
+        <!-- Rotating rings -->
+        <div class="rings-layer">
+            <div class="ring outer-ring"></div>
+            <div class="ring middle-ring"></div>
+            <div class="ring inner-ring"></div>
+        </div>
+
+        <!-- Center content (dynamic) -->
+        <div class="modal-center-content" id="modalCenterContent">
+            <div class="center-title" id="centerTitle">F.R.I.D.A.Y</div>
+            <div class="center-sub" id="centerSub">Friendship Reinforcer<br>Intelligent Dialogue, Always Yours</div>
+            <div class="center-dynamic" id="centerDynamic" style="display: none;"></div>
+        </div>
+
+        <!-- Side data cards (right side) -->
+        <div class="modal-side-panel" id="modalSidePanel">
+            <div class="data-card" id="card1">
+                <span id="card1Label">Humidity</span>
+                <strong id="card1Value">--</strong>
+            </div>
+            <div class="data-card" id="card2">
+                <span id="card2Label">Wind</span>
+                <strong id="card2Value">--</strong>
+            </div>
+            <div class="data-card" id="card3">
+                <span id="card3Label">Feels Like</span>
+                <strong id="card3Value">--</strong>
+            </div>
+            <div class="data-card" id="card4">
+                <span id="card4Label">Visibility</span>
+                <strong id="card4Value">--</strong>
+            </div>
+        </div>
+
+        <!-- Bottom response box -->
+        <div class="modal-response-box" id="modalResponseBox">
+            <div class="response-line"></div>
+            <p id="responseText">Weather conditions remain stable.</p>
+            <small id="responseSmall">“Feels like a quiet evening.”</small>
+        </div>
+    </div>
+</div>
 
 <script src="/menu/jarvis/friday.js"></script>
 </body>

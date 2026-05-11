@@ -1,0 +1,385 @@
+<!-- ========================================= -->
+<!-- FILE: index.html -->
+<!-- ========================================= -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRIDAY Stark Weather HUD</title>
+
+  <style>
+    /* ========================================= */
+/* FILE: style.css */
+/* ========================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  width: 100%;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at center, rgba(0,255,255,0.08), transparent 30%),
+    #02040b;
+
+  overflow: hidden;
+  color: white;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hud-container {
+  width: 100%;
+  max-width: 1400px;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ========================================= */
+/* TOP BAR */
+/* ========================================= */
+
+.top-bar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 30px 50px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.system-box,
+.time-box {
+  border: 1px solid rgba(0,255,255,0.25);
+  padding: 18px 24px;
+  background: rgba(255,255,255,0.02);
+  backdrop-filter: blur(12px);
+
+  box-shadow:
+    inset 0 0 15px rgba(0,255,255,0.08),
+    0 0 20px rgba(0,255,255,0.08);
+}
+
+.system-box h2 {
+  font-size: 1rem;
+  margin-top: 5px;
+  letter-spacing: 2px;
+}
+
+.time-box h1 {
+  font-size: 3rem;
+  color: #79f7ff;
+}
+
+.tiny-label {
+  color: rgba(121,247,255,0.6);
+  font-size: .7rem;
+  letter-spacing: 3px;
+}
+
+/* ========================================= */
+/* CENTER HUD */
+/* ========================================= */
+
+.center-hud {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 500px;
+  height: 500px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.outer-ring,
+.middle-ring,
+.inner-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(0,255,255,0.18);
+}
+
+.outer-ring {
+  width: 500px;
+  height: 500px;
+
+  border-style: dashed;
+
+  animation: rotateClockwise 20s linear infinite;
+
+  box-shadow:
+    0 0 30px rgba(0,255,255,0.15),
+    inset 0 0 30px rgba(0,255,255,0.08);
+}
+
+.middle-ring {
+  width: 380px;
+  height: 380px;
+
+  border-top-color: #00f7ff;
+  border-bottom-color: #00f7ff;
+
+  animation: rotateAnti 12s linear infinite;
+}
+
+.inner-ring {
+  width: 250px;
+  height: 250px;
+
+  border-left-color: #79f7ff;
+  border-right-color: #79f7ff;
+
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.weather-core {
+  position: absolute;
+  text-align: center;
+}
+
+.temperature {
+  font-size: 6rem;
+  font-weight: 700;
+
+  color: #8afaff;
+
+  text-shadow:
+    0 0 15px rgba(0,255,255,0.8),
+    0 0 35px rgba(0,255,255,0.4);
+}
+
+.condition {
+  margin-top: 10px;
+  letter-spacing: 5px;
+  color: rgba(255,255,255,0.7);
+}
+
+/* ========================================= */
+/* SIDE PANEL */
+/* ========================================= */
+
+.side-panel {
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.data-card {
+  width: 220px;
+  padding: 18px;
+
+  border: 1px solid rgba(0,255,255,0.18);
+
+  background: rgba(255,255,255,0.03);
+
+  box-shadow:
+    inset 0 0 12px rgba(0,255,255,0.08),
+    0 0 15px rgba(0,255,255,0.05);
+
+  position: relative;
+
+  overflow: hidden;
+}
+
+.data-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  width: 3px;
+  height: 100%;
+
+  background: #00f7ff;
+
+  box-shadow: 0 0 15px #00f7ff;
+}
+
+.data-card span {
+  display: block;
+  font-size: .7rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.data-card strong {
+  font-size: 1.4rem;
+  color: #c9fdff;
+}
+
+/* ========================================= */
+/* RESPONSE BOX */
+/* ========================================= */
+
+.friday-response {
+  position: absolute;
+  bottom: 50px;
+  left: 50px;
+
+  width: 400px;
+
+  padding: 20px;
+
+  border: 1px solid rgba(0,255,255,0.2);
+
+  background: rgba(255,255,255,0.03);
+
+  box-shadow:
+    inset 0 0 15px rgba(0,255,255,0.08),
+    0 0 20px rgba(0,255,255,0.06);
+}
+
+.response-line {
+  width: 60px;
+  height: 2px;
+  background: #00f7ff;
+  margin-bottom: 15px;
+
+  box-shadow: 0 0 12px #00f7ff;
+}
+
+.friday-response p {
+  color: #d9feff;
+  line-height: 1.6;
+}
+
+.friday-response small {
+  display: block;
+  margin-top: 12px;
+  color: rgba(121,247,255,0.7);
+}
+
+/* ========================================= */
+/* ANIMATIONS */
+/* ========================================= */
+
+@keyframes rotateClockwise {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotateAnti {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes pulse {
+  0%,100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: .7;
+  }
+}
+
+  </style>
+</head>
+<body>
+
+  <div class="hud-container">
+
+    <!-- TOP HEADER -->
+    <div class="top-bar">
+
+      <div class="system-box">
+        <div class="tiny-label">F.R.I.D.A.Y SYSTEM</div>
+        <h2>ATMOSPHERIC ANALYSIS</h2>
+      </div>
+
+      <div class="time-box">
+        <div class="tiny-label">LOCAL TIME</div>
+        <h1>10:45</h1>
+      </div>
+
+    </div>
+
+    <!-- CENTER HUD -->
+    <div class="center-hud">
+
+      <div class="outer-ring"></div>
+      <div class="middle-ring"></div>
+      <div class="inner-ring"></div>
+
+      <div class="weather-core">
+        <div class="temperature">24°</div>
+        <div class="condition">LIGHT RAIN</div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT SIDE DATA -->
+    <div class="side-panel">
+
+      <div class="data-card">
+        <span>Humidity</span>
+        <strong>77%</strong>
+      </div>
+
+      <div class="data-card">
+        <span>Wind Speed</span>
+        <strong>8 km/h</strong>
+      </div>
+
+      <div class="data-card">
+        <span>Feels Like</span>
+        <strong>26°</strong>
+      </div>
+
+      <div class="data-card">
+        <span>Visibility</span>
+        <strong>10 km</strong>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM RESPONSE -->
+    <div class="friday-response">
+      <div class="response-line"></div>
+
+      <p>
+        Weather conditions remain stable.
+      </p>
+
+      <small>
+        “Feels like a quiet evening.”
+      </small>
+    </div>
+
+  </div>
+
+</body>
+</html>
