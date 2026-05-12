@@ -1,5 +1,6 @@
 import { state } from '../../../app_launcher/state.js';
 import { supabaseClient } from '../../../app_launcher/config.js';
+import { lockPresenceState } from './presence.js';
 
 export async function initializeFridaySession() {
 
@@ -57,6 +58,8 @@ function hydrateFridayProfile() {
     const presence = document.getElementById('presenceState');
 
     if (presence && state.userProfile?.displayName) {
-        presence.innerText = `Connected • ${state.userProfile.displayName}`;
+     lockPresenceState(
+    `Connected • ${state.userProfile.displayName}`
+);
     }
 }
