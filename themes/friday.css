@@ -672,3 +672,203 @@
     font-size: 0.6rem;
     color: #cba0e0;
 }
+
+/* ========== CINEMATIC SPLASH SCREEN ========== */
+.friday-splash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #0a0a2a 0%, #030314 100%);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+    opacity: 1;
+    visibility: visible;
+    font-family: 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+}
+.friday-splash.hide {
+    opacity: 0;
+    visibility: hidden;
+}
+.splash-rings {
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    max-width: 80vw; 
+    max-height: 80vw;
+    pointer-events: none;
+}
+.splash-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(200, 180, 255, 0.5);
+    box-shadow: 0 0 20px rgba(160, 120, 255, 0.3);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.ring-outer {
+    width: 100%;
+    height: 100%;
+    animation: spin 8s linear infinite;
+    border-top-color: #b77eff;
+    border-right-color: rgba(200, 180, 255, 0.2);
+    border-bottom-color: rgba(200, 180, 255, 0.2);
+    border-left-color: rgba(200, 180, 255, 0.2);
+}
+.ring-middle {
+    width: 70%;
+    height: 70%;
+    top: 15%;
+    left: 15%;
+    animation: spin-reverse 6s linear infinite;
+    border-top-color: #ffe603;
+}
+.ring-inner {
+    width: 40%;
+    height: 40%;
+    top: 30%;
+    left: 30%;
+    animation: spin 4s linear infinite;
+    border-top-color: #ffccff;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+@keyframes spin-reverse {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+}
+.splash-content {
+    text-align: center;
+    color: white;
+    z-index: 2;
+    width: 80%;
+    max-width: 400px;
+}
+.splash-logo {
+    font-size: clamp(2rem, 10vw, 3.2rem); 
+    font-weight: 600;
+    letter-spacing: clamp(2px, 2vw, 6px);
+    white-space: nowrap;
+    background: linear-gradient(135deg, #ffffff, #c9b3ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 20px rgba(200, 150, 255, 0.5);
+}
+.splash-tagline {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    letter-spacing: 2px;
+    margin-bottom: 2rem;
+    padding: 0 10px;
+    line-height: 1.4;
+}
+.tagline-meaning {
+    display: block;
+    font-family: 'Courier New', monospace; 
+    font-weight: 700;
+    color: #ff99cc; 
+    text-shadow: 0 0 15px rgba(255, 153, 204, 0.6);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-size: 0.rem;
+    margin-bottom: -5px;
+}
+
+/* Optional: Make the syncing text even softer to create contrast */
+.splash-tagline {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+.splash-progress {
+    width: 80%;
+    margin: 1.5rem auto;
+    height: 2px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #b77eff, #f0b3ff);
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+.splash-status {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    letter-spacing: 1px;
+}
+.splash-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(2px 2px at 20% 40%, rgba(255,255,255,0.2) 1px, transparent 1px);
+    background-size: 30px 30px;
+    pointer-events: none;
+    opacity: 0.3;
+}
+.splash-stars {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.splash-stars::before,
+.splash-stars::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+}
+
+.splash-stars::before {
+    box-shadow: 
+        120px 80px 2px rgba(255,255,240,0.8),
+        450px 150px 1px rgba(255,255,200,0.6),
+        200px 500px 2px rgba(255,240,200,0.7),
+        550px 400px 1px rgba(255,255,255,0.5),
+        80px 350px 1px rgba(255,200,200,0.6),
+        380px 520px 2px rgba(200,200,255,0.7),
+        520px 90px 1px rgba(255,210,150,0.8),
+        40px 220px 1px rgba(200,220,255,0.6);
+    animation: twinkle 3s infinite alternate;
+}
+
+.splash-stars::after {
+    box-shadow: 
+        280px 120px 1px rgba(255,255,200,0.7),
+        600px 280px 2px rgba(255,200,200,0.5),
+        100px 450px 1px rgba(200,200,255,0.8),
+        480px 580px 1px rgba(255,220,150,0.6),
+        320px 380px 1px rgba(200,220,255,0.7),
+        20px 60px 1px rgba(255,255,200,0.5),
+        560px 620px 2px rgba(255,200,200,0.6);
+    animation: twinkle 4s infinite alternate-reverse;
+}
+
+@keyframes twinkle {
+    0% { opacity: 0.2; }
+    100% { opacity: 1; }
+}

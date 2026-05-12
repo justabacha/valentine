@@ -9,24 +9,22 @@ const PAGE_SIZE = 30;
 let isLoadingMore = false;
 let hasMoreMessages = true;
 let scrollTriggerEnabled = true;
+let initialLoadResolve = null;  // used to signal when initial load is done
 
-export function initializeChat() {
-    loadChatHistory();
+export async function initializeChat() {
     initTextareaEngine();
     window.sendMessageFromEngine = sendMessage;
     setupScrollListener();
+    // Wait for initial history load
+    await loadChatHistory();
     console.log("Chat systems initialized & bridged ✨");
 }
 
-// ========================================
-// SCROLL TO TOP -> LOAD OLDER MESSAGES
-// ========================================
 function setupScrollListener() {
     const chatArea = document.getElementById('chatArea');
     if (!chatArea) return;
     chatArea.addEventListener('scroll', () => {
         if (!scrollTriggerEnabled) return;
-        // If scrolled within 50px of the top and not already loading
         if (chatArea.scrollTop <= 50 && !isLoadingMore && hasMoreMessages) {
             loadOlderMessages();
         }
@@ -36,9 +34,8 @@ function setupScrollListener() {
 async function loadOlderMessages() {
     if (isLoadingMore || !hasMoreMessages || !state.userProfile?.id) return;
     isLoadingMore = true;
-    scrollTriggerEnabled = false; // prevent multiple triggers
+    scrollTriggerEnabled = false;
     const chatArea = document.getElementById('chatArea');
-    // Store current scroll height to restore position after prepend
     const oldScrollHeight = chatArea.scrollHeight;
     const oldScrollTop = chatArea.scrollTop;
 
@@ -63,7 +60,7 @@ async function loadOlderMessages() {
         return;
     }
 
-    const messages = data.reverse(); // oldest first for prepending
+    const messages = data.reverse();
     const typingDiv = document.getElementById('typingDots');
     for (const msg of messages) {
         const isUser = msg.sender === 'user';
@@ -73,22 +70,17 @@ async function loadOlderMessages() {
     currentOffset += data.length;
     if (data.length < PAGE_SIZE) hasMoreMessages = false;
 
-    // Restore scroll position so user stays at same relative place
     const newScrollHeight = chatArea.scrollHeight;
     chatArea.scrollTop = oldScrollTop + (newScrollHeight - oldScrollHeight);
     isLoadingMore = false;
     scrollTriggerEnabled = true;
 }
 
-// ========================================
-// LOAD INITIAL HISTORY (most recent 30, displayed oldest first)
-// ========================================
 async function loadChatHistory() {
     if (!state.userProfile?.id) return;
     currentOffset = 0;
     hasMoreMessages = true;
 
-    // Clear chat area except typing indicator
     const chatArea = document.getElementById('chatArea');
     const typingDiv = document.getElementById('typingDots');
     if (chatArea && typingDiv) {
@@ -116,10 +108,10 @@ async function loadChatHistory() {
         return;
     }
 
-    const messages = data.reverse(); // oldest first
+    const messages = data.reverse();
     for (const msg of messages) {
         const isUser = msg.sender === 'user';
-        appendMessage(isUser ? 'You' : 'FRIDAY', msg.message, isUser, true); // don't save again
+        appendMessage(isUser ? 'You' : 'FRIDAY', msg.message, isUser, true);
     }
     currentOffset = data.length;
     if (data.length < PAGE_SIZE) hasMoreMessages = false;
@@ -130,9 +122,6 @@ function showWelcomeMessage() {
     appendMessage('FRIDAY', welcomeMsg, false, true);
 }
 
-// ========================================
-// SAVE MESSAGE
-// ========================================
 export async function saveMessage(sender, text) {
     if (!state.userProfile?.id) return;
     try {
@@ -147,9 +136,6 @@ export async function saveMessage(sender, text) {
     }
 }
 
-// ========================================
-// SEND MESSAGE
-// ========================================
 function sendMessage() {
     const textarea = document.getElementById('messageInput');
     const typingDiv = document.getElementById('typingDots');
@@ -191,9 +177,6 @@ function sendMessage() {
     });
 }
 
-// ========================================
-// MESSAGE RENDERER (exported for external use)
-// ========================================
 export function appendMessage(sender, text, isUser = false, dontSave = false) {
     const chatArea = document.getElementById('chatArea');
     const typingDiv = document.getElementById('typingDots');

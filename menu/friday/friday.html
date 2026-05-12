@@ -5,9 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>FRIDAY · Always Yours</title>
     <link rel="stylesheet" href="/themes/friday.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body data-theme="lavender">
+
+<!-- ========== SPLASH SCREEN (CINEMATIC HUD) ========== -->
+<div id="fridaySplash" class="friday-splash">
+    <div class="splash-stars"></div>
+    <div class="splash-rings">
+        <div class="splash-ring ring-outer"></div>
+        <div class="splash-ring ring-middle"></div>
+        <div class="splash-ring ring-inner"></div>
+    </div>
+    <div class="splash-content">
+        <div class="splash-logo">F.R.I.D.A.Y</div>
+        <div class="splash-tagline">
+    <span class="tagline-meaning">Friendship Resonant Intuitive Dialogue, Always Yours</span>
+    <br><br>
+    syncing your atmosphere
+</div>
+        <div class="splash-progress">
+            <div class="progress-bar"></div>
+        </div>
+        <div class="splash-status" id="splashStatus">initializing...</div>
+    </div>
+    <div class="splash-particles"></div>
+</div>
+
 <div class="app-container">
     <div class="chat-surface" id="chatSurface">
         <canvas id="particle-canvas"></canvas>
