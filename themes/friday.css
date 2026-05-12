@@ -3,10 +3,13 @@
          FIXED: chat area fills remaining space, uses clamp() for responsive comfort
         ======================================================================*/
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
+             margin: 0;
+             padding: 0;
+             box-sizing: border-box;
+             -webkit-tap-highlight-color: transparent;
+             -webkit-user-select: none;
+             -webkit-touch-callout: none;
+             user-select: none;
         }
 
         body {

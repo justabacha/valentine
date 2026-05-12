@@ -32,8 +32,9 @@ export async function initializeFridaySession() {
         return false;
     }
 
-    // hydrate shared state
+    // 🔐 Store the user's UNIQUE ID (owner_id) for DB operations
     state.userProfile = {
+        id: data.id,                    // ✅ used as owner_id in friday_messages & friday_memories
         displayName: data.display_name,
         avatar: data.avatar_url,
         persona: data.persona
@@ -41,7 +42,7 @@ export async function initializeFridaySession() {
 
     hydrateFridayProfile();
 
-    console.log("FRIDAY session restored 🦾");
+    console.log("FRIDAY session restored 🦾, owner_id =", state.userProfile.id);
     return true;
 }
 
@@ -58,8 +59,6 @@ function hydrateFridayProfile() {
     const presence = document.getElementById('presenceState');
 
     if (presence && state.userProfile?.displayName) {
-     lockPresenceState(
-    `Connected • ${state.userProfile.displayName}`
-);
+        lockPresenceState(`Connected • ${state.userProfile.displayName}`);
     }
 }
