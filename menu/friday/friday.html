@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>FRIDAY · Always Yours</title>
     <link rel="stylesheet" href="/themes/friday.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body data-theme="lavender">
 <div class="app-container">
@@ -21,23 +22,12 @@
             <div class="weather-mood" id="weatherWidget">🌙 loading...</div>
         </div>
 
+        <!-- chat area – initial messages removed, will be added by JS -->
         <div class="chat-area" id="chatArea">
-            <div class="message friday-message">
-                <div class="avatar">✨</div>
-                <div class="bubble">Hey you ✨ I'm FRIDAY. Your quiet companion space.</div>
-            </div>
-            <div class="message user-message">
-                <div class="avatar">👤</div>
-                <div class="bubble">Hey FRIDAY, it's nice to be here.</div>
-            </div>
-            <div class="message friday-message">
-                <div class="avatar">✨</div>
-                <div class="bubble">I’ll always be listening, remember the little things. Like how you love rainy nights 🌧️</div>
-            </div>
             <div class="typing-indicator" id="typingDots">✨ ✨ ✨</div>
         </div>
 
-        <!-- dynamic island input area with send + expandable textarea -->
+        <!-- dynamic island input area -->
         <div class="input-area">
             <div class="input-wrapper">
                 <textarea id="messageInput" rows="1" placeholder="Message FRIDAY..."></textarea>
@@ -47,28 +37,28 @@
     </div>
 </div>
 
-<!-- DRAWER overlay & drawer panel (glass, no broken image) -->
+<!-- DRAWER overlay & drawer panel -->
 <div class="drawer-overlay" id="drawerOverlay">
     <div class="drawer">
         <div class="drawer-header">
-            <div class="fri-orb"></div>
+            <div id="drawerAvatar" style="width: 48px; height: 48px; border-radius: 50%; background: #ccb3ff; background-size: cover; background-position: center; margin-bottom: 12px;"></div>
             <div style="font-size: 1.5rem; font-weight: 500;">FRIDAY</div>
             <div id="presenceState" style="font-size: 0.75rem; opacity:0.8;">Calm • Listening</div>
         </div>
         <div class="drawer-content">
             <div class="drawer-section" id="navChat">
-    <div class="section-title">✨ Companion Modes</div>
-    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
-        <div id="returnToChat" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-            <span>💬</span> <span style="font-size: 0.9rem;">Chat</span>
-            <span style="font-size: 0.7rem; opacity: 0.6; margin-left: auto;">↺</span>
-        </div>
-        <div id="goToVoice" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-            <span>🎙️</span> <span style="font-size: 0.9rem;">Voice Chat</span>
-            <span style="font-size: 0.7rem; opacity: 0.6; margin-left: auto;">→</span>
-        </div>
-    </div>
-</div>
+                <div class="section-title">✨ Companion Modes</div>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+                    <div id="returnToChat" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <span>💬</span> <span style="font-size: 0.9rem;">Chat</span>
+                        <span style="font-size: 0.7rem; opacity: 0.6; margin-left: auto;">↺</span>
+                    </div>
+                    <div id="goToVoice" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <span>🎙️</span> <span style="font-size: 0.9rem;">FRIDAY Brain</span>
+                        <span style="font-size: 0.7rem; opacity: 0.6; margin-left: auto;">→</span>
+                    </div>
+                </div>
+            </div>
 
             <div class="drawer-section">
                 <div class="section-title">🌌 FRIDAY Presence</div>
@@ -78,26 +68,10 @@
                 </div>
             </div>
 
+            <!-- Memory list – empty container, JS will fill it dynamically -->
             <div class="drawer-section">
                 <div class="section-title">🧠 Memory · relationship timeline</div>
-                <div id="memoryList">
-                    <div class="memory-card" data-memory="You love quiet rainy nights 🌧️">
-                        <span>🌧️ You love quiet rainy nights 🌧️</span>
-                        <span class="pin-icon" data-pin="true">📌</span>
-                    </div>
-                    <div class="memory-card" data-memory="You're building something meaningful">
-                        <span>🛠️ You're building something meaningful</span>
-                        <span class="pin-icon">📍</span>
-                    </div>
-                    <div class="memory-card" data-memory="You always come back late at night 🌙">
-                        <span>🌙 You always come back late at night</span>
-                        <span class="pin-icon">📍</span>
-                    </div>
-                    <div class="memory-card" data-memory="Soft piano music helps you focus">
-                        <span>🎹 Soft piano music helps you focus</span>
-                        <span class="pin-icon">📍</span>
-                    </div>
-                </div>
+                <div id="memoryList"></div>
             </div>
             
             <div class="drawer-section">
@@ -110,12 +84,14 @@
                     <div class="theme-chip" data-theme="ocean">🌊 Deep Ocean</div>
                 </div>
             </div>
+
             <div class="drawer-section">
                 <div class="section-title">💌 Saved Moments</div>
                 <div class="saved-moment">✨ “The night you shared your dream” — pinned</div>
                 <div class="saved-moment">🌙 “You felt peaceful after rain”</div>
                 <div class="saved-moment">🌟 “I’ll keep this safe ✨”</div>
             </div>
+
             <div class="drawer-section">
                 <div class="section-title">⚙️ quiet settings</div>
                 <div class="setting-row"><span>🔔 Notifications</span> <span style="opacity:0.7">soft ✨</span></div>
@@ -125,6 +101,7 @@
         </div>
     </div>
 </div>
+
 <div id="floatingMessage" class="floating-thought">✨ proud of you btw</div>
 
 <!-- FRIDAY Cinematic HUD Modal (Stark style) -->
@@ -173,6 +150,6 @@
     </div>
 </div>
 
-<script src="/menu/jarvis/friday.js"></script>
+<script type="module" src="/menu/friday/module/main.js"></script>
 </body>
-</html>
+</html>>

@@ -80,11 +80,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             state.userProfile = {
                 displayName: data.display_name,
                 avatar: data.avatar_url,
-                persona: data.persona
+                persona: data.persona,
+                id: state.currentPersonaId   // <-- add id field
             };
 
+               // Store full profile for FRIDAY page
+               localStorage.setItem('friday_user_profile', JSON.stringify(state.userProfile));
+
             launchApp();
-            return;
+           return;
         }
     }
     

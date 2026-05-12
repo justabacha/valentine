@@ -1,4 +1,4 @@
-// FULL FRIDAY UI — Cinematic Modal + bent cards + map module
+// FULL FRIDAY UI — Stark Cinematic HUD (rotating rings)
 (function(){
     // ----- Drawer logic -----
     const drawerOverlay = document.getElementById('drawerOverlay');
@@ -8,7 +8,7 @@
     drawerOverlay.addEventListener('click', (e) => { if(e.target === drawerOverlay) closeDrawer(); });
     document.getElementById('navChat')?.addEventListener('click', closeDrawer);
     document.getElementById('goToVoice')?.addEventListener('click', () => {
-        window.location.href = 'friday-bridge.html';
+        window.location.href = '/menu/friday/friday-bridge.html';
     });
 
     // Memory pin reaction
@@ -78,29 +78,51 @@
         chatArea.scrollTop = chatArea.scrollHeight;
     }
 
-    // ========== NEW CINEMATIC MODAL CONTROLLER ==========
+    // ========== STARK CINEMATIC HUD MODAL ==========
     const modal = document.getElementById('fridayModal');
     let activeModalTimeout = null;
 
-    function showCinematicModal(contentHTML, showMap = false, lat = null, lon = null) {
+    function showStarkModal(options) {
+        // options: { centerTitle, centerSub, centerDynamic, cards, responseText, responseSmall }
         if(activeModalTimeout) clearTimeout(activeModalTimeout);
-        const dynamicDiv = document.getElementById('modalDynamicContent');
-        dynamicDiv.innerHTML = contentHTML;
         
-        const mapDiv = document.getElementById('modalMapModule');
-        if(showMap && lat !== null && lon !== null) {
-            const coordsSpan = document.getElementById('liveCoords');
-            if(coordsSpan) coordsSpan.innerHTML = `LAT: ${lat.toFixed(4)} | LON: ${lon.toFixed(4)}`;
-            mapDiv.style.display = 'flex';
-        } else {
-            mapDiv.style.display = 'none';
+        // Update center area
+        const centerTitleEl = document.getElementById('centerTitle');
+        const centerSubEl = document.getElementById('centerSub');
+        const centerDynamicEl = document.getElementById('centerDynamic');
+        if (centerTitleEl) centerTitleEl.innerHTML = options.centerTitle || 'F.R.I.D.A.Y';
+        if (centerSubEl) centerSubEl.innerHTML = options.centerSub || 'Friendship Reinforcer<br>Intelligent Dialogue, Always Yours';
+        if (options.centerDynamic) {
+            centerDynamicEl.style.display = 'block';
+            centerDynamicEl.innerHTML = options.centerDynamic;
+        } else if (centerDynamicEl) {
+            centerDynamicEl.style.display = 'none';
         }
+        
+        // Update side cards (up to 4)
+        if (options.cards) {
+            for (let i = 1; i <= 4; i++) {
+                const card = options.cards[i-1];
+                const labelEl = document.getElementById(`card${i}Label`);
+                const valueEl = document.getElementById(`card${i}Value`);
+                if (labelEl && valueEl && card) {
+                    labelEl.innerText = card.label;
+                    valueEl.innerHTML = card.value;
+                }
+            }
+        }
+        
+        // Update response box
+        const respTextEl = document.getElementById('responseText');
+        const respSmallEl = document.getElementById('responseSmall');
+        if (respTextEl) respTextEl.innerHTML = options.responseText || 'Weather conditions remain stable.';
+        if (respSmallEl) respSmallEl.innerHTML = options.responseSmall || '“Feels like a quiet evening.”';
         
         modal.classList.add('show');
         activeModalTimeout = setTimeout(() => {
             modal.classList.remove('show');
             activeModalTimeout = null;
-        }, 4500);
+        }, 5000);
         
         const closeModal = () => {
             if(activeModalTimeout) clearTimeout(activeModalTimeout);
@@ -135,47 +157,49 @@
         }
     }
 
-    // ----- Intent handler using the new modal -----
+    // ----- Intent handler using the Stark modal -----
     async function handleIntent(userMessage) {
         const lower = userMessage.toLowerCase();
         if(lower.includes('weather') || lower.includes('temperature') || lower.includes('forecast')) {
             const weather = await fetchWeatherData();
-            const cardsHTML = `
-                <div class="data-grid">
-                    <div class="bent-card"><div class="card-label">Humidity</div><div class="card-value">${weather.humidity}%</div></div>
-                    <div class="bent-card"><div class="card-label">Wind</div><div class="card-value">${weather.wind} km/h</div></div>
-                    <div class="bent-card"><div class="card-label">Feels like</div><div class="card-value">${weather.feelsLike}°</div></div>
-                    <div class="bent-card"><div class="card-label">Visibility</div><div class="card-value">10 km</div></div>
-                </div>
-                <div class="weather-core">
-                    <span style="font-size:2rem;">${weather.icon}</span> ${weather.temp}°C · ${weather.condition}
-                </div>
-            `;
-            showCinematicModal(cardsHTML, false);
+            showStarkModal({
+                centerTitle: `${weather.temp}°C`,
+                centerSub: weather.condition.toUpperCase(),
+                centerDynamic: weather.icon,
+                cards: [
+                    { label: 'Humidity', value: `${weather.humidity}%` },
+                    { label: 'Wind', value: `${weather.wind} km/h` },
+                    { label: 'Feels Like', value: `${weather.feelsLike}°` },
+                    { label: 'Visibility', value: '10 km' }
+                ],
+                responseText: `Current conditions: ${weather.temp}°C, ${weather.condition}.`,
+                responseSmall: `“${weather.condition === 'rainy' ? 'Perfect for a cozy day 🌧️' : 'FRIDAY feels the breeze ✨'}”`
+            });
             setTimeout(() => {
-                appendMessage('FRIDAY', `Current weather: ${weather.temp}°C, ${weather.condition}. ${weather.icon}`, false);
-            }, 4700);
+                appendMessage('FRIDAY', `Weather update: ${weather.temp}°C, ${weather.condition}. ${weather.icon}`, false);
+            }, 5200);
             return true;
         }
         else if(lower.includes('time') || lower.includes('clock')) {
             const now = new Date();
             const timeStr = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-            const dateStr = now.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
-            const cardsHTML = `
-                <div class="data-grid">
-                    <div class="bent-card"><div class="card-label">Timezone</div><div class="card-value">UTC${-now.getTimezoneOffset()/60}</div></div>
-                    <div class="bent-card"><div class="card-label">Date</div><div class="card-value">${dateStr}</div></div>
-                    <div class="bent-card"><div class="card-label">Day</div><div class="card-value">${now.toLocaleDateString(undefined, { weekday:'long' })}</div></div>
-                    <div class="bent-card"><div class="card-label">Seconds</div><div class="card-value">${now.getSeconds()}</div></div>
-                </div>
-                <div class="weather-core">
-                    <span style="font-size:2rem;">⏰</span> ${timeStr}
-                </div>
-            `;
-            showCinematicModal(cardsHTML, false);
+            const dateStr = now.toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+            showStarkModal({
+                centerTitle: timeStr,
+                centerSub: 'LOCAL TIME',
+                centerDynamic: '⏰',
+                cards: [
+                    { label: 'Timezone', value: `UTC${-now.getTimezoneOffset()/60}` },
+                    { label: 'Date', value: dateStr },
+                    { label: 'Day', value: now.toLocaleDateString(undefined, { weekday:'long' }) },
+                    { label: 'Seconds', value: now.getSeconds() }
+                ],
+                responseText: `It's ${timeStr} on ${dateStr}.`,
+                responseSmall: '“Always here, always now ✨”'
+            });
             setTimeout(() => {
-                appendMessage('FRIDAY', `It's ${timeStr} on ${dateStr}. ✨`, false);
-            }, 4700);
+                appendMessage('FRIDAY', `The time is ${timeStr}. ${dateStr}`, false);
+            }, 5200);
             return true;
         }
         else if(lower.includes('location') || lower.includes('where am i') || lower.includes('city')) {
@@ -188,21 +212,22 @@
                 const data = await res.json();
                 if(data.results && data.results[0]) city = data.results[0].name;
             } catch(e) { /* fallback */ }
-            const cardsHTML = `
-                <div class="data-grid">
-                    <div class="bent-card"><div class="card-label">City</div><div class="card-value">${city}</div></div>
-                    <div class="bent-card"><div class="card-label">Latitude</div><div class="card-value">${lat ? lat.toFixed(4) : '--'}</div></div>
-                    <div class="bent-card"><div class="card-label">Longitude</div><div class="card-value">${lon ? lon.toFixed(4) : '--'}</div></div>
-                    <div class="bent-card"><div class="card-label">Accuracy</div><div class="card-value">±10m</div></div>
-                </div>
-                <div class="weather-core">
-                    <span style="font-size:1.4rem;">📍</span> FRIDAY knows where you are
-                </div>
-            `;
-            showCinematicModal(cardsHTML, true, lat, lon);
+            showStarkModal({
+                centerTitle: city.toUpperCase(),
+                centerSub: 'CURRENT POSITION',
+                centerDynamic: '📍',
+                cards: [
+                    { label: 'Latitude', value: lat ? lat.toFixed(4) : '--' },
+                    { label: 'Longitude', value: lon ? lon.toFixed(4) : '--' },
+                    { label: 'Accuracy', value: '±10m' },
+                    { label: 'Status', value: 'SECURE' }
+                ],
+                responseText: `You are in ${city}.`,
+                responseSmall: '“FRIDAY knows where you are 🛸”'
+            });
             setTimeout(() => {
                 appendMessage('FRIDAY', `You are in ${city}. I'm right there with you. 🌍`, false);
-            }, 4700);
+            }, 5200);
             return true;
         }
         return false;
