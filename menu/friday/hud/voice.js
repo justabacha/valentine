@@ -10,13 +10,14 @@ let isListening = false;
 let isSpeaking = false;
 let restartTimer = null;
 let lastSpeechTime = 0;
-let silenceThreshold = 800; // ms - wait before accepting new user input after FRIDAY stops speaking
+let silenceThreshold = 2000; // ms - wait before accepting new user input after FRIDAY stops speaking
 let listeningPower = true; // NEW: listening power control to keep mic alive
+let fridaySpeechConfidence = 0; // Track confidence of speech being FRIDAY
 
-// Strip ONLY digits and special characters that might cause issues, keep letters and punctuation
-function stripProblematicChars(text) {
-  // Remove numbers and problematic unicode that cause voice synthesis issues
-  return text.replace(/\d+/g, '').trim();
+// Strip ONLY emojis, keep letters, numbers, punctuation
+function stripEmojis(text) {
+  // Remove emoji unicode ranges only - keep everything else (letters, numbers, punctuation)
+  return text.replace(/[\p{Emoji}\uD83C-\uDBFF\uDC00-\uDFFF]/gu, '').trim();
 }
 
 // Speak reply (respect Ghost Mode, set speaking flag)
@@ -27,12 +28,13 @@ function speak(text) {
   }
   if (!window.speechSynthesis) return;
   
-  const clean = stripProblematicChars(text);
+  const clean = stripEmojis(text);
   if (!clean) return;
   
   // Cancel any ongoing speech to avoid overlap
   window.speechSynthesis.cancel();
   isSpeaking = true;
+  fridaySpeechConfidence = 1.0; // HIGH confidence that FRIDAY is speaking
   lastSpeechTime = Date.now();
   
   const utterance = new SpeechSynthesisUtterance(clean);
@@ -79,6 +81,8 @@ function speak(text) {
   
   utterance.onend = () => {
     isSpeaking = false;
+    // Drop confidence gradually
+    fridaySpeechConfidence = 0.8;
     lastSpeechTime = Date.now();
     // Keep listening power on after FRIDAY finishes speaking
     if (listeningPower && isListening && !currentRecognition) {
@@ -88,17 +92,40 @@ function speak(text) {
   
   utterance.onerror = () => {
     isSpeaking = false;
-    lastSpeechTime = Date.now();
+    fridaySpeechConfidence = 0;
   };
   
   window.speechSynthesis.speak(utterance);
 }
 
-// Check if audio is likely FRIDAY speaking (use energy detection + timing)
+// Check if audio is likely FRIDAY speaking (use confidence + timing)
 function isLikelyFridaySpeaking() {
-  // If less than threshold time has passed since we started speaking, it's us
+  // If currently speaking, definitely us
+  if (isSpeaking) {
+    return true;
+  }
+  
+  // If confidence is still high AND not enough time has passed, it's us
   const timeSinceSpeechStart = Date.now() - lastSpeechTime;
-  return isSpeaking || timeSinceSpeechStart < silenceThreshold;
+  
+  // THREE-LAYER DETECTION:
+  // 1. If confidence is HIGH (>0.9) and time is short (<500ms) - DEFINITELY FRIDAY
+  if (fridaySpeechConfidence > 0.9 && timeSinceSpeechStart < 500) {
+    return true;
+  }
+  
+  // 2. If confidence is MEDIUM (>0.5) and time is medium (<1200ms) - PROBABLY FRIDAY
+  if (fridaySpeechConfidence > 0.5 && timeSinceSpeechStart < 1200) {
+    return true;
+  }
+  
+  // 3. If overall silence threshold not reached (2000ms) - MIGHT BE FRIDAY
+  if (timeSinceSpeechStart < silenceThreshold) {
+    return true;
+  }
+  
+  // After 2 seconds of silence and low confidence - safe to process user input
+  return false;
 }
 
 // Intent handler
@@ -235,6 +262,16 @@ async function startListening() {
     console.log('[VOICE] Recognition started - listening');
     addChatMsg('// listening continuously...', 'system');
     showFloatingNote('🎤 Listening...');
+    
+    // Gradual confidence decay while listening
+    const confidenceDecay = setInterval(() => {
+      if (fridaySpeechConfidence > 0) {
+        fridaySpeechConfidence -= 0.05; // Decay by 5% each 100ms
+      }
+      if (!isListening) {
+        clearInterval(confidenceDecay);
+      }
+    }, 100);
   };
 
   recog.onend = () => {
@@ -255,7 +292,7 @@ async function startListening() {
   };
 
   recog.onresult = async (event) => {
-    // NEW: Enhanced check - don't process if FRIDAY is speaking
+    // FIRST CHECK: Is FRIDAY currently speaking? Ignore everything
     if (isLikelyFridaySpeaking()) {
       console.log('[VOICE] Ignoring results - FRIDAY is speaking');
       return;
@@ -264,15 +301,29 @@ async function startListening() {
     for (let i = event.resultIndex; i < event.results.length; i++) {
       if (event.results[i].isFinal) {
         const transcript = event.results[i][0].transcript.trim();
+        const confidence = event.results[i][0].confidence || 0;
         
         // Don't process empty transcripts or very short noise
         if (!transcript || transcript.length < 2) {
+          console.log('[VOICE] Skipping empty/short transcript');
           continue;
         }
         
-        console.log('[VOICE] Final transcript:', transcript);
-        addChatMsg(transcript, 'user');
-        await processIntent(transcript);
+        // CONFIDENCE FILTER: Low confidence speech is likely echo/noise
+        // Speech recognition has confidence from 0-1, we need >0.3 to process
+        if (confidence < 0.3) {
+          console.log(`[VOICE] Ignoring low confidence (${confidence}): "${transcript}"`);
+          continue;
+        }
+        
+        // SECOND CHECK: After 2 seconds of FRIDAY silence, safe to process
+        if (!isLikelyFridaySpeaking()) {
+          console.log(`[VOICE] Final transcript (confidence: ${confidence}): "${transcript}"`);
+          addChatMsg(transcript, 'user');
+          await processIntent(transcript);
+        } else {
+          console.log('[VOICE] Blocking - still in FRIDAY speech window');
+        }
       }
     }
   };
