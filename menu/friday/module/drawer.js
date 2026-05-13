@@ -79,7 +79,7 @@ function setupDrawerToggle() {
     if (goToVoice) {
         goToVoice.addEventListener('click', () => {
             closeDrawer();
-            window.location.href = '/menu/friday/friday-bridge.html';
+            window.location.href = '/menu/friday/hud/index.html';
         });
     }
 }

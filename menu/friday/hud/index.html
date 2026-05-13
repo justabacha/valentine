@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FRIDAY HUD · Neural Core</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="/themes/friday-hud.css">
+</head>
+<body data-theme="cyan">
+<div id="hud">
+
+  <!-- CORNER DECORATIONS -->
+  <svg class="corner-svg" id="tl-corner" width="120" height="80" viewBox="0 0 120 80">
+    <polyline points="0,60 0,0 100,0" stroke="var(--cyan2)" stroke-width="1" fill="none"/>
+    <polyline points="0,45 0,15 30,15" stroke="var(--cyan)" stroke-width="0.5" fill="none" opacity="0.5"/>
+    <line x1="0" y1="30" x2="60" y2="30" stroke="var(--cyan3)" stroke-width="0.5" opacity="0.4"/>
+    <circle cx="0" cy="60" r="3" fill="none" stroke="var(--cyan)" stroke-width="1"/>
+    <circle cx="100" cy="0" r="3" fill="none" stroke="var(--cyan)" stroke-width="1"/>
+  </svg>
+  <svg class="corner-svg" id="tr-corner" width="120" height="80" viewBox="0 0 120 80">
+    <polyline points="0,60 0,0 100,0" stroke="var(--cyan2)" stroke-width="1" fill="none"/>
+    <polyline points="0,45 0,15 30,15" stroke="var(--cyan)" stroke-width="0.5" fill="none" opacity="0.5"/>
+    <circle cx="0" cy="60" r="3" fill="none" stroke="var(--cyan)" stroke-width="1"/>
+    <circle cx="100" cy="0" r="3" fill="none" stroke="var(--cyan)" stroke-width="1"/>
+  </svg>
+  <svg class="corner-svg" id="bl-corner" width="120" height="80" viewBox="0 0 120 80">
+    <polyline points="0,60 0,0 100,0" stroke="var(--cyan2)" stroke-width="1" fill="none"/>
+    <circle cx="0" cy="60" r="3" fill="none" stroke="var(--cyan)" stroke-width="1"/>
+    <circle cx="100" cy="0" r="3" fill="none" stroke="var(--cyan)" stroke-width="1"/>
+  </svg>
+  <svg class="corner-svg" id="br-corner" width="120" height="80" viewBox="0 0 120 80">
+    <polyline points="0,60 0,0 100,0" stroke="var(--cyan2)" stroke-width="1" fill="none"/>
+    <circle cx="0" cy="60" r="3" fill="none" stroke="var(--cyan)" stroke-width="1"/>
+    <circle cx="100" cy="0" r="3" fill="none" stroke="var(--cyan)" stroke-width="1"/>
+  </svg>
+
+  <div class="vert-bars" id="vb-left">
+    <div class="vb"></div><div class="vb" style="opacity:0.3"></div><div class="vb" style="opacity:0.15"></div>
+  </div>
+  <div class="vert-bars" id="vb-right">
+    <div class="vb" style="opacity:0.15"></div><div class="vb" style="opacity:0.3"></div><div class="vb"></div>
+  </div>
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div>
+      <div id="time-display">00:00:00</div>
+      <div id="day-display">loading</div>
+    </div>
+  </div>
+
+  <!-- LEFT PANEL -->
+  <div id="left-panel">
+    <div class="date-box flicker">
+      <div class="date-month" id="lp-month">november</div>
+      <div class="date-day" id="lp-day">16</div>
+      <svg viewBox="0 0 100 12" width="100%" height="12" style="margin-top:4px">
+        <path d="M5,6 A40,40 0 0,1 95,6" stroke="var(--cyan2)" stroke-width="1.5" fill="none"/>
+        <circle cx="5" cy="6" r="2" fill="var(--cyan)"/>
+        <circle cx="95" cy="6" r="2" fill="var(--cyan)"/>
+      </svg>
+    </div>
+
+    <div class="avatar-ring-wrap">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <defs><clipPath id="avatarClip"><circle cx="50" cy="50" r="30"/></clipPath></defs>
+        <circle cx="50" cy="50" r="46" stroke="#0d2a30" stroke-width="4" fill="none"/>
+        <circle cx="50" cy="50" r="46" stroke="var(--cyan2)" stroke-width="4" fill="none" stroke-dasharray="288 0" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+        <circle cx="50" cy="50" r="40" stroke="#0d2a30" stroke-width="2" fill="none"/>
+        <circle cx="50" cy="50" r="40" stroke="var(--cyan)" stroke-width="1.5" fill="none" stroke-dasharray="250 0" transform="rotate(-90 50 50)"/>
+        <g style="animation:spin-cw 8s linear infinite;transform-origin:50px 50px">
+          <circle cx="50" cy="50" r="35" stroke="var(--cyan2)" stroke-width="0.8" fill="none" stroke-dasharray="5 7" opacity="0.6"/>
+        </g>
+        <circle cx="50" cy="50" r="30" fill="#0a1c22" stroke="var(--cyan2)" stroke-width="1"/>
+        <circle cx="50" cy="43" r="9" fill="var(--cyan2)" opacity="0.4"/>
+        <ellipse cx="50" cy="62" rx="14" ry="9" fill="var(--cyan2)" opacity="0.3"/>
+        <image id="avatar-img" x="20" y="20" width="60" height="60" clip-path="url(#avatarClip)" preserveAspectRatio="xMidYMid slice" opacity="0"/>
+        <text x="50" y="88" text-anchor="middle" fill="var(--cyan3)" font-size="5" font-family="Share Tech Mono" letter-spacing="2">USER</text>
+      </svg>
+    </div>
+
+    <div>
+      <div class="section-title" style="margin-bottom:4px">Most Visited</div>
+      <div class="page-usage">
+        <div class="page-usage-row">
+          <div class="page-usage-header"><span class="page-usage-name">Home</span><span class="page-usage-pct">35%</span></div>
+          <div class="page-bar-track"><div class="page-bar-fill" style="width:35%"></div></div>
+        </div>
+        <div class="page-usage-row">
+          <div class="page-usage-header"><span class="page-usage-name">Messages</span><span class="page-usage-pct">40%</span></div>
+          <div class="page-bar-track"><div class="page-bar-fill" style="width:40%"></div></div>
+        </div>
+        <div class="page-usage-row">
+          <div class="page-usage-header"><span class="page-usage-name">Photos</span><span class="page-usage-pct">12%</span></div>
+          <div class="page-bar-track"><div class="page-bar-fill" style="width:12%"></div></div>
+        </div>
+        <div class="page-usage-row">
+          <div class="page-usage-header"><span class="page-usage-name">Wishlist</span><span class="page-usage-pct">8%</span></div>
+          <div class="page-bar-track"><div class="page-bar-fill" style="width:8%"></div></div>
+        </div>
+        <div class="page-usage-row">
+          <div class="page-usage-header"><span class="page-usage-name" style="color:var(--cyan)">F.R.I.D.A.Y</span><span class="page-usage-pct" style="color:var(--cyan)">50%</span></div>
+          <div class="page-bar-track"><div class="page-bar-fill" style="width:50%;background:var(--cyan)"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM LEFT CHAT CARD -->
+  <div id="comm-area">
+    <span class="section-title">F.R.I.D.A.Y — Last Response</span>
+    <div class="chat-card">
+      <div class="chat-scroll" id="chat-feed">
+        <div class="chat-msg system">// session start — HUD ready</div>
+        <div class="chat-msg friday"><span class="msg-label">FRI &gt;</span>Hello. I'm here. Tap the mic to speak.</div>
+      </div>
+    </div>
+    <svg viewBox="0 0 140 8" width="100%" height="8" style="margin-top:2px">
+      <path d="M0,4 Q35,1 70,4 Q105,7 140,4" stroke="var(--cyan2)" stroke-width="0.8" fill="none" opacity="0.5"/>
+      <circle cx="70" cy="4" r="1.5" fill="var(--cyan)"/>
+    </svg>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right-panel">
+    <div>
+      <div class="section-title" style="margin-bottom:3px">Navigate</div>
+      <div class="links-col">
+        <a class="link-item active" href="/index.html">⌂ Home</a>
+        <a class="link-item" href="/menu/friday/messages.html" style="padding-left:8px">◈ Messages</a>
+        <a class="link-item" href="/menu/friday/photos.html" style="padding-left:4px">◉ Photos</a>
+        <a class="link-item" href="/menu/friday/wishlist.html" style="padding-left:10px">◇ Wishlist</a>
+        <a class="link-item" href="/menu/friday/friday.html" style="color:var(--cyan)">▶ F.R.I.D.A.Y Chat</a>
+      </div>
+    </div>
+
+    <div class="iris-small">
+      <svg width="clamp(44px,7vw,78px)" height="clamp(44px,7vw,78px)" viewBox="0 0 78 78">
+        <circle cx="39" cy="39" r="36" stroke="var(--cyan2)" stroke-width="0.8" fill="none" opacity="0.5"/>
+        <circle cx="39" cy="39" r="32" stroke="var(--cyan3)" stroke-width="0.5" fill="none" stroke-dasharray="4 3" opacity="0.5"/>
+        <circle cx="39" cy="39" r="28" stroke="var(--cyan2)" stroke-width="1.2" fill="none"/>
+        <g style="animation:spin-cw 30s linear infinite;transform-origin:39px 39px">
+          <circle cx="39" cy="39" r="23" stroke="var(--cyan2)" stroke-width="1.5" fill="none" stroke-dasharray="5 4"/>
+        </g>
+        <g style="animation:spin-ccw 18s linear infinite;transform-origin:39px 39px">
+          <circle cx="39" cy="39" r="18" stroke="var(--cyan)" stroke-width="1" fill="none" stroke-dasharray="3 5"/>
+        </g>
+        <circle cx="39" cy="39" r="14" fill="#081218" stroke="var(--cyan2)" stroke-width="0.8"/>
+        <circle cx="39" cy="39" r="10" fill="#0a1c22" stroke="var(--cyan)" stroke-width="0.4"/>
+        <circle cx="39" cy="39" r="4" fill="#040a0e"/>
+        <ellipse cx="35" cy="35" rx="4" ry="3" fill="rgba(255,255,255,0.1)"/>
+        <circle cx="39" cy="23" r="1.2" fill="#fff" opacity="0.8"/>
+        <circle cx="51" cy="27" r="1.2" fill="#fff" opacity="0.7"/>
+        <circle cx="55" cy="39" r="1.2" fill="#fff" opacity="0.7"/>
+        <circle cx="51" cy="51" r="1.2" fill="#fff" opacity="0.7"/>
+        <circle cx="39" cy="55" r="1.2" fill="#fff" opacity="0.8"/>
+        <circle cx="27" cy="51" r="1.2" fill="#fff" opacity="0.7"/>
+        <circle cx="23" cy="39" r="1.2" fill="#fff" opacity="0.7"/>
+        <circle cx="27" cy="27" r="1.2" fill="#fff" opacity="0.7"/>
+        <text x="39" y="71" text-anchor="middle" fill="var(--cyan3)" font-size="5" font-family="Share Tech Mono" letter-spacing="1.5">MPC</text>
+      </svg>
+    </div>
+
+    <div>
+      <div class="section-title" style="margin-bottom:3px">Wishlist</div>
+      <div class="wish-list">
+        <div class="wish-item"><span class="wish-icon">◇</span>New headphones</div>
+        <div class="wish-item"><span class="wish-icon">◇</span>Trip to Zanzibar</div>
+        <div class="wish-item"><span class="wish-icon">◇</span>Canon EOS R50</div>
+        <div class="wish-item"><span class="wish-icon">◇</span>Mechanical keyboard</div>
+        <div class="wish-item" style="color:var(--cyan3)"><span class="wish-icon" style="color:var(--cyan3)">◈</span>+ add wish...</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title" style="margin-bottom:3px">Activity</div>
+      <div class="notif-list" id="notif-list">
+        <div class="notif-item"><div class="notif-dot"></div><div class="notif-text">Bestie added a new photo<span class="notif-time">2 min ago</span></div></div>
+        <div class="notif-item"><div class="notif-dot"></div><div class="notif-text">New message from Amara<span class="notif-time">14 min ago</span></div></div>
+        <div class="notif-item"><div class="notif-dot dim"></div><div class="notif-text">New wish added to list<span class="notif-time">1 hr ago</span></div></div>
+        <div class="notif-item"><div class="notif-dot dim"></div><div class="notif-text">F.R.I.D.A.Y sent a thought<span class="notif-time">3 hr ago</span></div></div>
+      </div>
+    </div>
+
+    <div class="system-name">FRIDAY system</div>
+
+    <div class="weather-box" id="weather-card">
+      <div class="weather-header">
+        <div><span class="small" id="w-condition">Loading...</span><div><span class="weather-temp" id="w-temp">--</span><span class="weather-deg">°C</span></div></div>
+        <div style="text-align:right"><span class="small" id="w-location">Detecting...</span></div>
+      </div>
+      <div style="height:1px;background:rgba(0,180,200,0.2);margin:3px 0"></div>
+      <div class="weather-row"><span class="weather-key">Feels</span><span class="weather-val" id="w-feels">--°C</span></div>
+      <div class="weather-row"><span class="weather-key">Wind</span><span class="weather-val" id="w-wind">-- km/h</span></div>
+      <div class="weather-row"><span class="weather-key">Humidity</span><span class="weather-val" id="w-humidity">--%</span></div>
+      <div class="weather-row"><span class="weather-key">Visibility</span><span class="weather-val" id="w-vis">-- km</span></div>
+    </div>
+  </div>
+
+  <!-- CENTER HUD -->
+  <div id="center-hud">
+    <div id="mode-buttons">
+      <div class="mode-btn" id="btn-listen">MIC: OFF</div>
+      <div class="mode-sep"></div>
+      <div class="mode-btn active" id="btn-focus">FOCUS MODE</div>
+      <div class="mode-sep"></div>
+      <div class="mode-btn active" id="btn-ghost">GHOST MODE</div>
+    </div>
+
+    <canvas id="center-canvas"></canvas>
+    <svg id="center-svg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow"><feGaussianBlur stdDeviation="3"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="glow-strong"><feGaussianBlur stdDeviation="5"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <circle cx="300" cy="300" r="288" stroke="var(--cyan3)" stroke-width="0.5" fill="none" opacity="0.4"/>
+      <circle cx="300" cy="300" r="282" stroke="var(--cyan2)" stroke-width="1" fill="none" opacity="0.3"/>
+      <circle cx="300" cy="300" r="275" stroke="var(--cyan2)" stroke-width="0.5" fill="none" stroke-dasharray="2 6" opacity="0.5"/>
+      <g id="seg-ring"></g>
+      <g id="outer-ticks"></g>
+      <circle cx="300" cy="300" r="238" stroke="#0d2a30" stroke-width="18" fill="none"/>
+      <circle cx="300" cy="300" r="238" stroke="var(--cyan2)" stroke-width="0.8" fill="none" opacity="0.6"/>
+      <circle cx="300" cy="300" r="229" stroke="var(--cyan2)" stroke-width="0.5" fill="none" opacity="0.3"/>
+      <g class="spin-cw"><circle cx="300" cy="300" r="220" stroke="var(--cyan)" stroke-width="2" fill="none" stroke-dasharray="4 8" filter="url(#glow)" opacity="0.9"/></g>
+      <g class="spin-ccw"><circle cx="300" cy="300" r="212" stroke="var(--cyan2)" stroke-width="1" fill="none" stroke-dasharray="2 10" opacity="0.5"/></g>
+      <circle cx="300" cy="300" r="205" fill="#06101480" stroke="var(--cyan2)" stroke-width="0.5" opacity="0.8"/>
+      <g id="led-ring" filter="url(#glow-strong)"></g>
+      <circle cx="300" cy="300" r="180" stroke="var(--cyan3)" stroke-width="0.5" fill="none" opacity="0.4" stroke-dasharray="3 5"/>
+      <circle cx="300" cy="300" r="155" stroke="var(--cyan2)" stroke-width="0.5" fill="none" opacity="0.3"/>
+      <circle cx="300" cy="300" r="130" stroke="var(--cyan2)" stroke-width="0.8" fill="none" opacity="0.4"/>
+      <circle cx="300" cy="300" r="100" stroke="var(--cyan3)" stroke-width="0.5" fill="none" opacity="0.3" stroke-dasharray="2 4"/>
+      <circle cx="300" cy="300" r="70"  stroke="var(--cyan2)" stroke-width="0.5" fill="none" opacity="0.3"/>
+      <g class="spin-cw" style="animation-duration:8s"><circle cx="300" cy="300" r="118" stroke="var(--cyan)" stroke-width="1.5" fill="none" stroke-dasharray="20 180" stroke-linecap="round" filter="url(#glow)" opacity="0.8"/></g>
+      <circle cx="300" cy="300" r="52" fill="#040d12" stroke="var(--cyan2)" stroke-width="1.5"/>
+      <circle cx="300" cy="300" r="44" fill="none" stroke="var(--cyan)" stroke-width="0.8" opacity="0.5"/>
+      <g id="ring-labels"></g>
+    </svg>
+
+    <div class="hud-friday">
+      <div class="friday-name">F.R.I.D.A.Y</div>
+      <div class="friday-tagline">Friendship Resonant Intuitive<br>Dialogue, Always Yours</div>
+    </div>
+  </div>
+
+  <div id="core-status">
+    <span class="status-dot" id="status-dot"></span>
+    <span id="status-text">Listening</span>
+  </div>
+
+  <div id="reactor-state">
+    <div class="state-pill active" id="pill-ghost">Ghost Mode</div>
+    <div class="mode-sep" style="height:10px"></div>
+    <div class="state-pill active" id="pill-focus">Focus Mode</div>
+  </div>
+
+  <div class="data-side" id="data-left">
+    <div class="data-row-label">Uptime</div>
+    <div class="data-bar-row"><span class="data-bar-val" id="uptime-val">--</span></div>
+    <div style="height:1px;background:rgba(0,180,200,0.2);margin:2px 0"></div>
+    <div class="data-bar-row"><div class="data-bar-track"><div class="data-bar-fill" style="width:70%"></div></div></div>
+    <div class="data-bar-row"><div class="data-bar-track"><div class="data-bar-fill" style="width:45%"></div></div></div>
+    <div class="data-bar-row"><div class="data-bar-track"><div class="data-bar-fill" style="width:85%"></div></div></div>
+    <div style="height:1px;background:rgba(0,180,200,0.2);margin:2px 0"></div>
+    <div class="data-row-label">Signal</div>
+    <div class="data-bar-row"><div class="data-bar-track"><div class="data-bar-fill" style="width:60%;background:var(--cyan)"></div></div></div>
+    <div class="data-bar-row"><div class="data-bar-track"><div class="data-bar-fill" style="width:30%"></div></div></div>
+    <div style="height:1px;background:rgba(0,180,200,0.2);margin:2px 0"></div>
+    <div class="data-row-label">Neural</div><div class="data-row-label" style="margin-top:4px">Matrix</div>
+    <div style="height:1px;background:rgba(0,180,200,0.2);margin:2px 0"></div>
+    <div class="data-row-label">DPS</div>
+  </div>
+
+  <div class="data-side" id="data-right">
+    <div class="data-row-label">Memory</div>
+    <div style="height:1px;background:rgba(0,180,200,0.2);margin:2px 0"></div>
+    <div class="data-bar-row"><div class="data-bar-track"><div class="data-bar-fill" style="width:55%"></div></div></div>
+    <div class="data-bar-row"><div class="data-bar-track"><div class="data-bar-fill" style="width:80%"></div></div></div>
+    <div class="data-bar-row"><div class="data-bar-track"><div class="data-bar-fill" style="width:40%"></div></div></div>
+    <div style="height:1px;background:rgba(0,180,200,0.2);margin:2px 0"></div>
+    <div class="data-row-label">Sync</div>
+    <div class="data-bar-row"><div class="data-bar-track"><div class="data-bar-fill" style="width:92%;background:var(--cyan)"></div></div></div>
+    <div style="height:1px;background:rgba(0,180,200,0.2);margin:2px 0"></div>
+    <div class="data-row-label">Core Temp</div><div class="data-row-label">Nominal</div>
+  </div>
+</div>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>
