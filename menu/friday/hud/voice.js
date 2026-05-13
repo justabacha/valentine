@@ -3,68 +3,51 @@ import { fetchWeatherData } from '../module/weather.js';
 import { getCurrentTimeData } from '../module/time.js';
 import { fetchLocationData } from '../module/location.js';
 import { showFloatingNote } from '../module/floating.js';
-import { isFocusMode, isGhostMode, setFocusMode } from './modes.js';
+import { isGhostMode, isFocusMode, setFocusMode } from './modes.js';
 
 let currentRecognition = null;
 let isListening = false;
-let isProcessing = false;
-let pendingIntent = null;
-let isSpeaking = false;           // prevent self‑trigger
+let isSpeaking = false;
 let restartTimer = null;
 
-// Strip emojis and other non‑text characters for speech
+// Strip ONLY emojis, keep letters, numbers, punctuation
 function stripEmojis(text) {
-  return text.replace(/[\p{Emoji}\uD83C-\uDBFF\uDC00-\uDFFF]+/gu, '').trim();
+  return text.replace(/[\p{Emoji}\uD83C-\uDBFF\uDC00-\uDFFF]/gu, '');
 }
 
-// Speak text (if Ghost Mode OFF)
+// Speak reply (respect Ghost Mode, set speaking flag)
 function speak(text) {
   if (isGhostMode()) return;
   if (!window.speechSynthesis) return;
+  const clean = stripEmojis(text);
+  if (!clean) return;
   
-  // Cancel any ongoing speech to avoid overlapping
+  // Cancel any ongoing speech to avoid overlap
   window.speechSynthesis.cancel();
   
-  const cleanText = stripEmojis(text);
-  if (!cleanText) return;
-  
-  const utterance = new SpeechSynthesisUtterance(cleanText);
+  const utterance = new SpeechSynthesisUtterance(clean);
   utterance.rate = 0.9;
   utterance.pitch = 1.0;
   
-  // Try to select a natural voice
+  // Choose a clear voice (prefer Google or built‑in)
   const voices = window.speechSynthesis.getVoices();
-  let preferred = voices.find(v => v.lang === 'en-GB' && v.name.includes('Google')) ||
-                  voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) ||
-                  voices.find(v => v.lang === 'en-GB') ||
-                  voices.find(v => v.lang === 'en-US');
+  const preferred = voices.find(v => v.lang === 'en-GB' && v.name.includes('Google')) ||
+                    voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) ||
+                    voices.find(v => v.lang === 'en-GB') ||
+                    voices.find(v => v.lang === 'en-US');
   if (preferred) utterance.voice = preferred;
   
   isSpeaking = true;
   utterance.onend = () => {
     isSpeaking = false;
-    // After speaking, ensure recognition is still running (restart if needed)
-    ensureRecognitionRunning();
   };
-  utterance.onerror = () => { isSpeaking = false; };
-  
+  utterance.onerror = () => {
+    isSpeaking = false;
+  };
   window.speechSynthesis.speak(utterance);
 }
 
-// Ensure recognition is alive (especially for mobile where continuous may fail)
-function ensureRecognitionRunning() {
-  if (!isListening) return;
-  if (restartTimer) clearTimeout(restartTimer);
-  restartTimer = setTimeout(() => {
-    if (isListening && (!currentRecognition || !currentRecognition.started)) {
-      // Restart recognition
-      startListening(true); // silent restart
-    }
-    restartTimer = null;
-  }, 500);
-}
-
-// Intent handler – returns reply text
+// Intent handler (same as before)
 async function handleHUDIntent(transcript) {
   const lower = transcript.toLowerCase();
   let reply = "";
@@ -96,33 +79,18 @@ async function handleHUDIntent(transcript) {
     speak(reply);
     return true;
   }
-  else if (lower.includes('change theme')) {
-    reply = "Changing theme ...";
-    addChatMsg(reply, 'friday');
-    speak(reply);
-    await new Promise(r => setTimeout(r, 1500));
-    reply = "Theme changed successfully.";
-    addChatMsg(reply, 'friday');
-    speak(reply);
-    return true;
-  }
   else if (lower.includes('focus mode on')) {
     setFocusMode(true);
-    reply = "Focus Mode activated. I'll handle one thing at a time.";
+    reply = "Focus Mode activated.";
     addChatMsg(reply, 'friday');
     speak(reply);
     return true;
   }
   else if (lower.includes('focus mode off')) {
     setFocusMode(false);
-    reply = "Focus Mode deactivated. I'm fully responsive.";
+    reply = "Focus Mode deactivated.";
     addChatMsg(reply, 'friday');
     speak(reply);
-    if (pendingIntent) {
-      const pending = pendingIntent;
-      pendingIntent = null;
-      handleHUDIntent(pending);
-    }
     return true;
   }
   else {
@@ -133,23 +101,14 @@ async function handleHUDIntent(transcript) {
   }
 }
 
+// Process intent (respect Focus Mode)
 async function processIntent(transcript) {
-  if (isProcessing) return;
-  if (isFocusMode() && pendingIntent) {
-    addChatMsg("// Focus Mode active. Please wait.", 'system');
-    return;
-  }
-  if (isFocusMode()) {
-    pendingIntent = transcript;
-    isProcessing = true;
-    await handleHUDIntent(transcript);
-    isProcessing = false;
-    pendingIntent = null;
-  } else {
-    await handleHUDIntent(transcript);
-  }
+  if (!isListening) return;
+  await handleHUDIntent(transcript);
+  // No auto-stop – keep listening
 }
 
+// Create recognition instance (continuous)
 function createRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
@@ -157,13 +116,14 @@ function createRecognition() {
     return null;
   }
   const recog = new SpeechRecognition();
-  recog.continuous = true;
+  recog.continuous = true;       // always listening
   recog.interimResults = false;
   recog.lang = 'en-US';
   recog.maxAlternatives = 1;
   return recog;
 }
 
+// Request microphone permission once
 async function requestMicrophonePermission() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     addChatMsg('// Microphone not supported', 'system');
@@ -180,10 +140,12 @@ async function requestMicrophonePermission() {
   }
 }
 
-async function startListening(silent = false) {
+// Start continuous listening
+async function startListening() {
   const hasPermission = await requestMicrophonePermission();
   if (!hasPermission) return;
 
+  // Clean up any existing recognition
   if (currentRecognition) {
     try { currentRecognition.abort(); } catch(e) {}
     currentRecognition = null;
@@ -195,46 +157,56 @@ async function startListening(silent = false) {
   recog.onstart = () => {
     isListening = true;
     updateUI(true);
-    if (!silent) addChatMsg('// listening...', 'system');
+    addChatMsg('// listening continuously...', 'system');
     showFloatingNote('🎤 Listening...');
   };
 
   recog.onend = () => {
-    // If we're still supposed to be listening, restart (mobile fallback)
+    // If we're still supposed to be listening, restart (important for mobile)
     if (isListening) {
-      ensureRecognitionRunning();
-    } else {
-      updateUI(false);
-      if (!silent) addChatMsg('// microphone stopped', 'system');
+      if (restartTimer) clearTimeout(restartTimer);
+      restartTimer = setTimeout(() => {
+        if (isListening && !currentRecognition) {
+          startListening();
+        }
+        restartTimer = null;
+      }, 500);
     }
     currentRecognition = null;
   };
 
   recog.onresult = async (event) => {
-    if (isSpeaking) return; // ignore self‑speech
-    const resultIndex = event.resultIndex;
-    const transcript = event.results[resultIndex][0].transcript;
-    addChatMsg(transcript, 'user');
-    await processIntent(transcript);
-    // No auto‑stop, keep listening
+    if (isSpeaking) return; // ignore own voice
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        const transcript = event.results[i][0].transcript;
+        addChatMsg(transcript, 'user');
+        await processIntent(transcript);
+      }
+    }
   };
 
   recog.onerror = (event) => {
     console.error('Speech error', event.error);
-    let msg = '';
-    if (event.error === 'not-allowed') msg = 'Microphone access blocked.';
-    else if (event.error === 'no-speech') msg = 'No speech detected.';
-    else msg = `Error: ${event.error}`;
-    addChatMsg(`// ${msg}`, 'system');
     if (event.error === 'not-allowed') {
+      addChatMsg('// Microphone access blocked. Please reload and grant permission.', 'system');
       if (isListening) {
         isListening = false;
         updateUI(false);
       }
       currentRecognition = null;
+    } else if (event.error === 'no-speech') {
+      // ignore, continue listening
     } else {
-      // try to restart
-      ensureRecognitionRunning();
+      addChatMsg(`// Speech error: ${event.error}`, 'system');
+      // attempt restart
+      if (currentRecognition) {
+        try { currentRecognition.abort(); } catch(e) {}
+        currentRecognition = null;
+      }
+      if (isListening) {
+        startListening();
+      }
     }
   };
 
@@ -250,7 +222,7 @@ async function startListening(silent = false) {
 function stopListening() {
   if (restartTimer) clearTimeout(restartTimer);
   if (currentRecognition) {
-    try { currentRecognition.stop(); } catch(e) {}
+    try { currentRecognition.abort(); } catch(e) {}
     currentRecognition = null;
   }
   if (isListening) {
@@ -258,7 +230,6 @@ function stopListening() {
     updateUI(false);
     addChatMsg('// microphone off (manual)', 'system');
   }
-  // Cancel any ongoing speech
   window.speechSynthesis.cancel();
   isSpeaking = false;
 }
@@ -292,4 +263,6 @@ export function initVoice() {
     micBtn.addEventListener('click', toggleMicrophone);
     micBtn._voiceHandler = true;
   }
+  // Preload voices (optional)
+  window.speechSynthesis.getVoices();
 }
