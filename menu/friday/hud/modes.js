@@ -28,7 +28,7 @@ function toggleGhost() {
   addChatMsg(`// Ghost Mode ${ghostMode ? 'activated' : 'deactivated'}`, 'system');
 }
 
-// Exported setters (used by other modules if needed)
+// Exported setters
 export function setFocusMode(enabled) {
   focusMode = enabled;
   updateModeUI();
@@ -39,7 +39,6 @@ export function setGhostMode(enabled) {
   updateModeUI();
 }
 
-// Getters
 export function isFocusMode() { return focusMode; }
 export function isGhostMode() { return ghostMode; }
 
@@ -54,11 +53,10 @@ export function initModes() {
   if (focusPill) focusPill.addEventListener('click', toggleFocus);
   if (ghostPill) ghostPill.addEventListener('click', toggleGhost);
   
-  // Mic button is already handled in voice.js, but ensure it's wired
   const micBtn = document.getElementById('btn-listen');
-  if (micBtn && !micBtn.hasListener) {
+  if (micBtn && !micBtn._modeHandler) {
     micBtn.addEventListener('click', toggleMicrophone);
-    micBtn.hasListener = true;
+    micBtn._modeHandler = true;
   }
   
   updateModeUI();

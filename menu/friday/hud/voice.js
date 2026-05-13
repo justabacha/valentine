@@ -3,29 +3,14 @@ import { fetchWeatherData } from '../module/weather.js';
 import { getCurrentTimeData } from '../module/time.js';
 import { fetchLocationData } from '../module/location.js';
 import { showFloatingNote } from '../module/floating.js';
+import { isFocusMode, setFocusMode } from './modes.js';
 
 let currentRecognition = null;
 let isListening = false;
+let isProcessing = false;      // to avoid overlapping intents
+let pendingIntent = null;      // store intent while focus mode is active
 
-// Helper: request microphone permission explicitly (triggers browser prompt)
-async function requestMicrophonePermission() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    addChatMsg('// Your browser does not support microphone access', 'system');
-    return false;
-  }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(track => track.stop()); // release immediately, we only need permission
-    return true;
-  } catch (err) {
-    console.error('Microphone permission denied', err);
-    addChatMsg('// Microphone permission denied. Please grant access and reload.', 'system');
-    showFloatingNote('🔇 Microphone blocked – check browser settings');
-    return false;
-  }
-}
-
-// Intent handler
+// Intent handler (returns true if intent matched)
 async function handleHUDIntent(transcript) {
   const lower = transcript.toLowerCase();
   if (lower.includes('weather') || lower.includes('temperature')) {
@@ -47,13 +32,60 @@ async function handleHUDIntent(transcript) {
     addChatMsg("Hello, love. I'm here.", 'friday');
     return true;
   }
+  else if (lower.includes('change theme')) {
+    addChatMsg("Changing theme ...", 'friday');
+    // Simulate heavy task
+    await new Promise(r => setTimeout(r, 1500));
+    addChatMsg("Theme changed successfully.", 'friday');
+    return true;
+  }
+  else if (lower.includes('focus mode on')) {
+    setFocusMode(true);
+    addChatMsg("Focus Mode activated. I'll handle one thing at a time.", 'friday');
+    return true;
+  }
+  else if (lower.includes('focus mode off')) {
+    setFocusMode(false);
+    addChatMsg("Focus Mode deactivated. I'm fully responsive.", 'friday');
+    // If there was a pending intent, process it now
+    if (pendingIntent) {
+      const pending = pendingIntent;
+      pendingIntent = null;
+      handleHUDIntent(pending);
+    }
+    return true;
+  }
   else {
-    addChatMsg("I'm listening, always. How can I help?", 'friday');
+    // generic fallback – but in continuous mode, maybe just ignore or give a gentle reply
+    addChatMsg("I'm here. Just speak naturally.", 'friday');
     return false;
   }
 }
 
-// Create a new recognition instance
+// Process intent respecting Focus Mode
+async function processIntent(transcript) {
+  if (isProcessing) return;
+  
+  if (isFocusMode() && pendingIntent) {
+    // Already have a pending intent; drop this one or queue? For simplicity, ignore new ones.
+    addChatMsg("// Focus Mode active. Please wait for current task to finish.", 'system');
+    return;
+  }
+  
+  if (isFocusMode()) {
+    // Queue this intent and process immediately (but block new ones until done)
+    pendingIntent = transcript;
+    isProcessing = true;
+    await handleHUDIntent(transcript);
+    isProcessing = false;
+    pendingIntent = null;
+  } else {
+    // Normal mode: process immediately
+    await handleHUDIntent(transcript);
+  }
+}
+
+// Create recognition instance (continuous mode)
 function createRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
@@ -61,23 +93,29 @@ function createRecognition() {
     return null;
   }
   const recog = new SpeechRecognition();
-  recog.continuous = false;
+  recog.continuous = true;        // stay listening
   recog.interimResults = false;
   recog.lang = 'en-US';
   recog.maxAlternatives = 1;
   return recog;
 }
 
-// Start listening
+// Start listening (continuous)
 async function startListening() {
-  // First, ensure we have permission
-  const hasPermission = await requestMicrophonePermission();
-  if (!hasPermission) {
-    updateUI(false);
+  // Check permission
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    addChatMsg('// Your browser does not support microphone access', 'system');
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(track => track.stop()); // we only need permission
+  } catch (err) {
+    addChatMsg('// Microphone permission denied. Please grant access and reload.', 'system');
+    showFloatingNote('🔇 Microphone blocked');
     return;
   }
 
-  // Clean up any existing recognition
   if (currentRecognition) {
     try { currentRecognition.abort(); } catch(e) {}
     currentRecognition = null;
@@ -94,43 +132,46 @@ async function startListening() {
   };
 
   recog.onend = () => {
+    // In continuous mode, this only happens if user stops it or error.
     if (isListening) {
-      // Natural end (after one utterance) – we stop listening mode
+      // Possibly restart? For now we just update UI.
       isListening = false;
       updateUI(false);
-      addChatMsg('// listening stopped', 'system');
-      showFloatingNote('🎤 Microphone off');
+      addChatMsg('// microphone stopped', 'system');
     }
     currentRecognition = null;
   };
 
   recog.onresult = async (event) => {
-    const transcript = event.results[0][0].transcript;
+    // Get the latest transcript (last result)
+    const resultIndex = event.resultIndex;
+    const transcript = event.results[resultIndex][0].transcript;
     addChatMsg(transcript, 'user');
-    await handleHUDIntent(transcript);
-    // After handling, stop listening (manual mode – one utterance per click)
-    stopListening();
+    await processIntent(transcript);
+    // Do NOT stop listening – stay on.
   };
 
   recog.onerror = (event) => {
     console.error('Speech recognition error', event.error);
-    let errorMsg = '';
-    if (event.error === 'not-allowed') errorMsg = 'Microphone access blocked. Please grant permission.';
-    else if (event.error === 'no-speech') errorMsg = 'No speech detected. Try again.';
-    else errorMsg = `Error: ${event.error}`;
-    addChatMsg(`// ${errorMsg}`, 'system');
-    if (isListening) {
-      isListening = false;
-      updateUI(false);
+    let msg = '';
+    if (event.error === 'not-allowed') msg = 'Microphone access blocked.';
+    else if (event.error === 'no-speech') msg = 'No speech detected.';
+    else msg = `Error: ${event.error}`;
+    addChatMsg(`// ${msg}`, 'system');
+    // If error is fatal, stop trying
+    if (event.error === 'not-allowed') {
+      if (isListening) {
+        isListening = false;
+        updateUI(false);
+      }
+      currentRecognition = null;
     }
-    currentRecognition = null;
   };
 
   currentRecognition = recog;
   try {
     recog.start();
   } catch (err) {
-    console.error('Failed to start recognition', err);
     addChatMsg('// Could not start microphone. Try again.', 'system');
     currentRecognition = null;
   }
@@ -144,6 +185,7 @@ function stopListening() {
   if (isListening) {
     isListening = false;
     updateUI(false);
+    addChatMsg('// microphone off (manual)', 'system');
   }
 }
 
@@ -176,4 +218,5 @@ export function initVoice() {
     micBtn.addEventListener('click', toggleMicrophone);
     micBtn._voiceHandler = true;
   }
+  // Optionally auto-start? No – let user click mic.
 }
