@@ -3,51 +3,85 @@ import { fetchWeatherData } from '../module/weather.js';
 import { getCurrentTimeData } from '../module/time.js';
 import { fetchLocationData } from '../module/location.js';
 import { showFloatingNote } from '../module/floating.js';
-import { isFocusMode, setFocusMode } from './modes.js';
+import { isFocusMode, isGhostMode, setFocusMode } from './modes.js';
 
 let currentRecognition = null;
 let isListening = false;
-let isProcessing = false;      // to avoid overlapping intents
-let pendingIntent = null;      // store intent while focus mode is active
+let isProcessing = false;
+let pendingIntent = null;
 
-// Intent handler (returns true if intent matched)
+// Speak text (if Ghost Mode is OFF)
+function speak(text) {
+  if (isGhostMode()) {
+    // Ghost mode: no voice output
+    return;
+  }
+  if (!window.speechSynthesis) {
+    console.warn("Speech synthesis not supported");
+    return;
+  }
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.9;
+  utterance.pitch = 1.1;
+  utterance.voice = speechSynthesis.getVoices().find(v => v.lang === 'en-US') || null;
+  window.speechSynthesis.cancel(); // avoid overlapping speech
+  window.speechSynthesis.speak(utterance);
+}
+
+// Intent handler – returns reply text (so we can both display and speak)
 async function handleHUDIntent(transcript) {
   const lower = transcript.toLowerCase();
+  let reply = "";
+
   if (lower.includes('weather') || lower.includes('temperature')) {
     const weather = await fetchWeatherData();
-    addChatMsg(`Weather: ${weather.temp}°C, ${weather.condition}. ${weather.icon}`, 'friday');
+    reply = `Weather update: ${weather.temp}°C, ${weather.condition}. ${weather.icon}`;
+    addChatMsg(reply, 'friday');
+    speak(reply);
     return true;
   }
   else if (lower.includes('time') || lower.includes('clock')) {
     const timeData = getCurrentTimeData();
-    addChatMsg(`It's ${timeData.timeString} on ${timeData.dateString}.`, 'friday');
+    reply = `It's ${timeData.timeString} on ${timeData.dateString}.`;
+    addChatMsg(reply, 'friday');
+    speak(reply);
     return true;
   }
   else if (lower.includes('location') || lower.includes('where am i')) {
     const location = await fetchLocationData();
-    addChatMsg(`You are in ${location.city}. I'm right there with you.`, 'friday');
+    reply = `You are in ${location.city}. I'm right there with you.`;
+    addChatMsg(reply, 'friday');
+    speak(reply);
     return true;
   }
   else if (lower.includes('hello') || lower.includes('hi friday')) {
-    addChatMsg("Hello, love. I'm here.", 'friday');
+    reply = "Hello, love. I'm here.";
+    addChatMsg(reply, 'friday');
+    speak(reply);
     return true;
   }
   else if (lower.includes('change theme')) {
-    addChatMsg("Changing theme ...", 'friday');
-    // Simulate heavy task
+    reply = "Changing theme ...";
+    addChatMsg(reply, 'friday');
+    speak(reply);
     await new Promise(r => setTimeout(r, 1500));
-    addChatMsg("Theme changed successfully.", 'friday');
+    reply = "Theme changed successfully.";
+    addChatMsg(reply, 'friday');
+    speak(reply);
     return true;
   }
   else if (lower.includes('focus mode on')) {
     setFocusMode(true);
-    addChatMsg("Focus Mode activated. I'll handle one thing at a time.", 'friday');
+    reply = "Focus Mode activated. I'll handle one thing at a time.";
+    addChatMsg(reply, 'friday');
+    speak(reply);
     return true;
   }
   else if (lower.includes('focus mode off')) {
     setFocusMode(false);
-    addChatMsg("Focus Mode deactivated. I'm fully responsive.", 'friday');
-    // If there was a pending intent, process it now
+    reply = "Focus Mode deactivated. I'm fully responsive.";
+    addChatMsg(reply, 'friday');
+    speak(reply);
     if (pendingIntent) {
       const pending = pendingIntent;
       pendingIntent = null;
@@ -56,8 +90,9 @@ async function handleHUDIntent(transcript) {
     return true;
   }
   else {
-    // generic fallback – but in continuous mode, maybe just ignore or give a gentle reply
-    addChatMsg("I'm here. Just speak naturally.", 'friday');
+    reply = "I'm here. Just speak naturally.";
+    addChatMsg(reply, 'friday');
+    speak(reply);
     return false;
   }
 }
@@ -67,25 +102,22 @@ async function processIntent(transcript) {
   if (isProcessing) return;
   
   if (isFocusMode() && pendingIntent) {
-    // Already have a pending intent; drop this one or queue? For simplicity, ignore new ones.
     addChatMsg("// Focus Mode active. Please wait for current task to finish.", 'system');
     return;
   }
   
   if (isFocusMode()) {
-    // Queue this intent and process immediately (but block new ones until done)
     pendingIntent = transcript;
     isProcessing = true;
     await handleHUDIntent(transcript);
     isProcessing = false;
     pendingIntent = null;
   } else {
-    // Normal mode: process immediately
     await handleHUDIntent(transcript);
   }
 }
 
-// Create recognition instance (continuous mode)
+// Create recognition instance (continuous)
 function createRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
@@ -93,28 +125,34 @@ function createRecognition() {
     return null;
   }
   const recog = new SpeechRecognition();
-  recog.continuous = true;        // stay listening
+  recog.continuous = true;
   recog.interimResults = false;
   recog.lang = 'en-US';
   recog.maxAlternatives = 1;
   return recog;
 }
 
-// Start listening (continuous)
-async function startListening() {
-  // Check permission
+// Request microphone permission
+async function requestMicrophonePermission() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     addChatMsg('// Your browser does not support microphone access', 'system');
-    return;
+    return false;
   }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(track => track.stop()); // we only need permission
+    stream.getTracks().forEach(track => track.stop());
+    return true;
   } catch (err) {
     addChatMsg('// Microphone permission denied. Please grant access and reload.', 'system');
     showFloatingNote('🔇 Microphone blocked');
-    return;
+    return false;
   }
+}
+
+// Start continuous listening
+async function startListening() {
+  const hasPermission = await requestMicrophonePermission();
+  if (!hasPermission) return;
 
   if (currentRecognition) {
     try { currentRecognition.abort(); } catch(e) {}
@@ -132,9 +170,7 @@ async function startListening() {
   };
 
   recog.onend = () => {
-    // In continuous mode, this only happens if user stops it or error.
     if (isListening) {
-      // Possibly restart? For now we just update UI.
       isListening = false;
       updateUI(false);
       addChatMsg('// microphone stopped', 'system');
@@ -143,22 +179,20 @@ async function startListening() {
   };
 
   recog.onresult = async (event) => {
-    // Get the latest transcript (last result)
     const resultIndex = event.resultIndex;
     const transcript = event.results[resultIndex][0].transcript;
     addChatMsg(transcript, 'user');
     await processIntent(transcript);
-    // Do NOT stop listening – stay on.
+    // mic stays on
   };
 
   recog.onerror = (event) => {
-    console.error('Speech recognition error', event.error);
+    console.error('Speech error', event.error);
     let msg = '';
     if (event.error === 'not-allowed') msg = 'Microphone access blocked.';
     else if (event.error === 'no-speech') msg = 'No speech detected.';
     else msg = `Error: ${event.error}`;
     addChatMsg(`// ${msg}`, 'system');
-    // If error is fatal, stop trying
     if (event.error === 'not-allowed') {
       if (isListening) {
         isListening = false;
@@ -218,5 +252,4 @@ export function initVoice() {
     micBtn.addEventListener('click', toggleMicrophone);
     micBtn._voiceHandler = true;
   }
-  // Optionally auto-start? No – let user click mic.
 }
