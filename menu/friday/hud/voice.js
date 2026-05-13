@@ -17,35 +17,21 @@ let confidenceDecayInterval = null;
 let ignoreResultsUntil = 0;
 let interruptionHandled = false;
 
-// Simple beep using Web Audio (optional, silent if fails)
-function playBeep() {
-  try {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    oscillator.connect(gain);
-    gain.connect(audioCtx.destination);
-    oscillator.frequency.value = 880;
-    gain.gain.value = 0.2;
-    oscillator.type = 'sine';
-    oscillator.start();
-    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-    oscillator.stop(audioCtx.currentTime + 0.3);
-    // Resume audio context if suspended (browser policy)
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-  } catch(e) { console.warn('Beep failed', e); }
-}
-
-// Flash the status dot (add/remove a class)
-function blinkStatusDot() {
-  const dot = document.getElementById('status-dot');
-  if (!dot) return;
-  dot.classList.add('blink-fast');
-  setTimeout(() => dot.classList.remove('blink-fast'), 300);
-}
+// Optional: play a beep on interruption 
+// const beepSound = new Audio('/sounds/beep.mp3');
 
 function stripEmojis(text) {
   return text.replace(/[\p{Emoji}\uD83C-\uDBFF\uDC00-\uDFFF]/gu, '').trim();
+}
+
+// Flash the status dot (reactor blink)
+function blinkReactor() {
+  const dot = document.getElementById('status-dot');
+  if (!dot) return;
+  dot.classList.add('blink');
+  setTimeout(() => {
+    dot.classList.remove('blink');
+  }, 300);
 }
 
 function speak(text) {
@@ -149,7 +135,7 @@ async function handleHUDIntent(transcript) {
     return true;
   }
   else {
-    // generic fallback – do not speak
+    // generic fallback – silent
     return false;
   }
 }
@@ -264,7 +250,6 @@ async function startListening() {
       const transcript = result[0].transcript.trim();
       const confidence = result[0].confidence ?? 0.5;
 
-      // Interrupt FRIDAY if she is speaking and user says something with confidence
       if (isSpeaking && transcript.length > 1 && confidence > 0.5) {
         if (!interruptionHandled) {
           interruptionHandled = true;
@@ -272,15 +257,22 @@ async function startListening() {
           window.speechSynthesis.cancel();
           isSpeaking = false;
           fridaySpeechConfidence = 0;
-          
-          // Provide non‑speech feedback: floating note + beep + blink
-          showFloatingNote('🫡 I\'m listening – go ahead');
-          playBeep();
-          blinkStatusDot();
-          
+
+          // === POLITE INTERRUPTION FEEDBACK (no speech) ===
+          // 1. Floating note
+          showFloatingNote('🔄 Interrupted – listening');
+
+          // 2. Reactor blink (status dot flash)
+          blinkReactor();
+
+          // 3. Beep Sound 
+          /* if (beepSound) {
+             beepSound.currentTime = 0;
+            beepSound.play().catch(e => console.log('beep failed', e));
+          }*/
+
           setTimeout(() => { interruptionHandled = false; }, 200);
         }
-        // After interruption, ignore the interrupting transcript (don't process it as a command)
         return;
       }
 
