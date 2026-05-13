@@ -10,7 +10,7 @@ export default async function handler(req, res) {
 
   const KOKORO_API_KEY = process.env.KOKORO_API_KEY;
   if (!KOKORO_API_KEY) {
-    console.error('Missing KOKORO_API_KEY');
+    console.error('Missing KOKORO_API_KEY environment variable');
     return res.status(500).json({ error: 'Server configuration error.' });
   }
 
@@ -24,15 +24,15 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'model_uint8',           
+        model: 'model',            // ✅ correct model name (use 'model', 'model_q4', etc.)
         input: text,
-        voice: 'af_heart',
+        voice: 'af_heart',         // you can change voice: 'af_bella', 'af_nicole', etc.
       }),
     });
 
     if (!kokoroRes.ok) {
       const errorText = await kokoroRes.text();
-      console.error(`Kokoro error (${kokoroRes.status}): ${errorText}`);
+      console.error(`Kokoro API error (${kokoroRes.status}): ${errorText}`);
       return res.status(kokoroRes.status).json({ error: 'TTS service failed.' });
     }
 

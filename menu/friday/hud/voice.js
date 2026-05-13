@@ -1,3 +1,13 @@
+/**
+ * voice.js — FRIDAY Voice Engine (Kokoro only, no fallback)
+ *
+ * Features:
+ *  - Continuous listening (always on)
+ *  - Interruption detection (user speaks while FRIDAY is talking)
+ *  - Post-speech cooldown to prevent self‑listening
+ *  - All speech output via Kokoro TTS (no Web Speech)
+ */
+
 import { addChatMsg } from './ui/chat-ui.js';
 import { fetchWeatherData } from '../module/weather.js';
 import { getCurrentTimeData } from '../module/time.js';
@@ -5,183 +15,199 @@ import { fetchLocationData } from '../module/location.js';
 import { showFloatingNote } from '../module/floating.js';
 import { isGhostMode, isFocusMode, setFocusMode } from './modes.js';
 
-let currentRecognition = null;
+// ─── State ─────────────────────────────────────────────────────────────────
+
+let currentAudio = null;          // currently playing Audio element
+let recognition = null;
 let isListening = false;
 let isSpeaking = false;
+let listeningEnabled = false;     // master power switch
+let ignoreUntil = 0;              // ignore STT results until this timestamp
 let restartTimer = null;
-let lastSpeechTime = 0;
-let silenceThreshold = 1200;
-let listeningPower = true;
-let fridaySpeechConfidence = 0;
-let confidenceDecayInterval = null;
-let ignoreResultsUntil = 0;
-let interruptionHandled = false;
 
-// Optional: play a beep on interruption 
-// const beepSound = new Audio('/sounds/beep.mp3');
+// Interruption tracking
+let interimStartTime = 0;
+let lastInterimText = '';
+
+const POST_SPEECH_BUFFER_MS = 1800;   // silence after speaking before accepting mic
+const INTERRUPT_SUSTAIN_MS = 1500;    // ms of sustained interim speech to interrupt
+const INTERRUPT_CONFIDENCE = 0.72;    // confidence threshold for interruption
+
+// ─── Utilities ────────────────────────────────────────────────────────────
 
 function stripEmojis(text) {
   return text.replace(/[\p{Emoji}\uD83C-\uDBFF\uDC00-\uDFFF]/gu, '').trim();
 }
 
-// Flash the status dot (reactor blink)
 function blinkReactor() {
   const dot = document.getElementById('status-dot');
   if (!dot) return;
   dot.classList.add('blink');
-  setTimeout(() => {
-    dot.classList.remove('blink');
-  }, 300);
+  setTimeout(() => dot.classList.remove('blink'), 300);
 }
 
-/*function speak(text) {
+function updateUI(listening) {
+  const btn = document.getElementById('btn-listen');
+  const dot = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+
+  if (listening) {
+    btn?.classList.add('active');
+    if (btn) btn.textContent = 'MIC: ON';
+    dot?.classList.remove('off');
+    if (statusText) statusText.textContent = 'Listening';
+  } else {
+    btn?.classList.remove('active');
+    if (btn) btn.textContent = 'MIC: OFF';
+    dot?.classList.add('off');
+    if (statusText) statusText.textContent = 'Mic Off';
+  }
+}
+
+// ─── Kokoro TTS ───────────────────────────────────────────────────────────
+
+async function speak(text) {
   if (isGhostMode()) return;
-  if (!window.speechSynthesis) return;
 
   const clean = stripEmojis(text);
   if (!clean) return;
 
-  window.speechSynthesis.cancel();
+  // Stop any currently playing audio
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+
   isSpeaking = true;
-  fridaySpeechConfidence = 1.0;
-  lastSpeechTime = Date.now();
-  ignoreResultsUntil = Date.now() + 1500;
+  ignoreUntil = Date.now() + 60000; // temporary, will be updated when audio ends
 
-  const utterance = new SpeechSynthesisUtterance(clean);
-  utterance.rate = 0.95;
-  utterance.pitch = 1.2;
-  utterance.volume = 1.0;
-
-  const voices = window.speechSynthesis.getVoices();
-  let preferred = null;
-  preferred = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en'));
-  if (!preferred) preferred = voices.find(v => v.name.includes('Samantha') && v.lang.startsWith('en'));
-  if (!preferred) preferred = voices.find(v => v.name.includes('Victoria') && v.lang.startsWith('en'));
-  if (!preferred) preferred = voices.find(v => v.name.includes('Karen') && v.lang.startsWith('en'));
-  if (!preferred) preferred = voices.find(v => v.name.includes('Microsoft') && v.lang.startsWith('en'));
-  if (!preferred) preferred = voices.find(v => v.lang === 'en-GB');
-  if (!preferred) preferred = voices.find(v => v.lang === 'en-US');
-  if (!preferred && voices.length > 0) preferred = voices[0];
-  if (preferred) utterance.voice = preferred;
-
-  utterance.onend = () => {
-    isSpeaking = false;
-    fridaySpeechConfidence = 0.8;
-    lastSpeechTime = Date.now();
-    if (listeningPower && isListening && !currentRecognition) {
-      startListening();
-    }
-  };
-  utterance.onerror = () => {
-    isSpeaking = false;
-    fridaySpeechConfidence = 0;
-  };
-
-  window.speechSynthesis.speak(utterance);
-}*/
-//=====kokoro tts_test=====
-async function speak(text) {
-  if (isGhostMode()) return;
   try {
     const response = await fetch('/api/kokoro', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text: clean }),
     });
-    if (!response.ok) throw new Error('TTS failed');
+
+    if (!response.ok) throw new Error(`Kokoro error: ${response.status}`);
+
     const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
-    // ... (playback logic, onended cleanup, etc.)
+    currentAudio = audio;
+
+    audio.onended = () => {
+      URL.revokeObjectURL(audioUrl);
+      currentAudio = null;
+      isSpeaking = false;
+      ignoreUntil = Date.now() + POST_SPEECH_BUFFER_MS;
+
+      // Auto‑restart recognition after cooldown
+      if (listeningEnabled && isListening && !recognition) {
+        setTimeout(() => startRecognition(), POST_SPEECH_BUFFER_MS + 50);
+      }
+    };
+
+    audio.onerror = () => {
+      URL.revokeObjectURL(audioUrl);
+      currentAudio = null;
+      isSpeaking = false;
+      ignoreUntil = Date.now() + POST_SPEECH_BUFFER_MS;
+      addChatMsg('// Audio playback error.', 'system');
+    };
+
+    await audio.play();
   } catch (err) {
-    fallbackToWebSpeech(text);
+    console.error('Kokoro TTS failed:', err);
+    isSpeaking = false;
+    ignoreUntil = Date.now() + POST_SPEECH_BUFFER_MS;
+    addChatMsg('// Voice synthesis failed.', 'system');
   }
 }
 
-function isLikelyFridaySpeaking() {
-  if (isSpeaking) return true;
-  const timeSince = Date.now() - lastSpeechTime;
-  if (fridaySpeechConfidence > 0.9 && timeSince < 500) return true;
-  if (fridaySpeechConfidence > 0.5 && timeSince < 1200) return true;
-  if (timeSince < silenceThreshold) return true;
-  return false;
-}
+// ─── Intent Handling ──────────────────────────────────────────────────────
 
-async function handleHUDIntent(transcript) {
+async function handleIntent(transcript) {
   const lower = transcript.toLowerCase();
-  let reply = "";
 
-  if (lower.includes('weather') || lower.includes('temperature')) {
-    const weather = await fetchWeatherData();
-    reply = `Weather update: ${weather.temp} degrees Celsius, ${weather.condition}`;
-    addChatMsg(reply, 'friday');
-    speak(reply);
-    return true;
-  }
-  else if (lower.includes('time') || lower.includes('clock')) {
-    const timeData = getCurrentTimeData();
-    reply = `It's ${timeData.timeString} on ${timeData.dateString}.`;
-    addChatMsg(reply, 'friday');
-    speak(reply);
-    return true;
-  }
-  else if (lower.includes('location') || lower.includes('where am i')) {
-    const location = await fetchLocationData();
-    reply = `You are in ${location.city}. I'm right there with you.`;
-    addChatMsg(reply, 'friday');
-    speak(reply);
-    return true;
-  }
-  else if (lower.includes('hello') || lower.includes('hi friday') || lower.includes('hey friday')) {
-    reply = "Hello, love. I'm here.";
-    addChatMsg(reply, 'friday');
-    speak(reply);
-    return true;
-  }
-  else if (lower.includes('focus mode on')) {
+  // Focus mode toggles always pass through
+  if (lower.includes('focus mode on')) {
     setFocusMode(true);
-    reply = "Focus Mode activated. I'll stay silent while you work.";
+    const reply = "Focus Mode activated. I'll stay silent while you work.";
     addChatMsg(reply, 'friday');
-    speak(reply);
+    await speak(reply);
     return true;
   }
-  else if (lower.includes('focus mode off')) {
+  if (lower.includes('focus mode off')) {
     setFocusMode(false);
-    reply = "Focus Mode deactivated. I'm back.";
+    const reply = "Focus Mode deactivated. I'm back.";
     addChatMsg(reply, 'friday');
-    speak(reply);
+    await speak(reply);
     return true;
-  }
-  else {
-    // generic fallback – silent
-    return false;
-  }
-}
-
-async function processIntent(transcript) {
-  if (!isListening) return;
-
-  const lower = transcript.toLowerCase();
-  if (lower.includes('focus mode on') || lower.includes('focus mode off')) {
-    await handleHUDIntent(transcript);
-    return;
   }
 
   if (isFocusMode()) {
-    console.log('[VOICE] Focus mode active – ignoring non‑toggle command');
-    return;
+    console.log('[VOICE] Focus mode active – ignoring command');
+    return true; // consume silently
   }
 
-  await handleHUDIntent(transcript);
+  // Weather
+  if (lower.includes('weather') || lower.includes('temperature')) {
+    const w = await fetchWeatherData();
+    const reply = `Weather update: ${w.temp} degrees Celsius, ${w.condition}.`;
+    addChatMsg(reply, 'friday');
+    await speak(reply);
+    return true;
+  }
+
+  // Time
+  if (lower.includes('time') || lower.includes('clock')) {
+    const t = getCurrentTimeData();
+    const reply = `It's ${t.timeString} on ${t.dateString}.`;
+    addChatMsg(reply, 'friday');
+    await speak(reply);
+    return true;
+  }
+
+  // Location
+  if (lower.includes('location') || lower.includes('where am i')) {
+    const loc = await fetchLocationData();
+    const reply = `You are in ${loc.city}. I'm right there with you.`;
+    addChatMsg(reply, 'friday');
+    await speak(reply);
+    return true;
+  }
+
+  // Greeting
+  if (lower.includes('hello') || lower.includes('hi friday') || lower.includes('hey friday')) {
+    const reply = "Hello, love. I'm here.";
+    addChatMsg(reply, 'friday');
+    await speak(reply);
+    return true;
+  }
+
+  // No match
+  return false;
 }
 
-function createRecognition() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    addChatMsg('// Speech recognition not supported', 'system');
+async function processTranscript(transcript) {
+  addChatMsg(transcript, 'user');
+  const matched = await handleIntent(transcript);
+  if (!matched) {
+    const reply = "FRIDAY listening.";
+    addChatMsg(reply, 'friday');
+    await speak(reply);
+  }
+}
+
+// ─── Speech Recognition ───────────────────────────────────────────────────
+
+function buildRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    addChatMsg('// Speech recognition not supported in this browser.', 'system');
     return null;
   }
-  const recog = new SpeechRecognition();
+  const recog = new SR();
   recog.continuous = true;
   recog.interimResults = true;
   recog.lang = 'en-US';
@@ -189,76 +215,65 @@ function createRecognition() {
   return recog;
 }
 
-async function requestMicrophonePermission() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    addChatMsg('// Microphone not supported', 'system');
+async function requestMicPermission() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    addChatMsg('// Microphone API not available.', 'system');
     return false;
   }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(track => track.stop());
+    stream.getTracks().forEach(t => t.stop());
     return true;
-  } catch (err) {
-    addChatMsg('// Microphone permission denied. Please grant access in settings.', 'system');
+  } catch {
+    addChatMsg('// Microphone permission denied. Grant access in browser settings.', 'system');
     showFloatingNote('🔇 Microphone blocked');
     return false;
   }
 }
 
-async function startListening() {
-  if (!listeningPower) return;
+async function startRecognition() {
+  if (!listeningEnabled) return;
 
-  const hasPermission = await requestMicrophonePermission();
+  if (recognition) {
+    try { recognition.abort(); } catch {}
+    recognition = null;
+  }
+
+  const hasPermission = await requestMicPermission();
   if (!hasPermission) {
-    listeningPower = false;
+    listeningEnabled = false;
+    updateUI(false);
     return;
   }
 
-  if (currentRecognition) {
-    try { currentRecognition.abort(); } catch(e) {}
-    currentRecognition = null;
-  }
-
-  if (confidenceDecayInterval) {
-    clearInterval(confidenceDecayInterval);
-    confidenceDecayInterval = null;
-  }
-
-  const recog = createRecognition();
+  const recog = buildRecognition();
   if (!recog) return;
 
   recog.onstart = () => {
     isListening = true;
     updateUI(true);
     console.log('[VOICE] Recognition started');
-    addChatMsg('// listening continuously...', 'system');
-    showFloatingNote('🎤 Listening...');
-
-    confidenceDecayInterval = setInterval(() => {
-      if (fridaySpeechConfidence > 0) fridaySpeechConfidence -= 0.05;
-      if (!isListening) {
-        clearInterval(confidenceDecayInterval);
-        confidenceDecayInterval = null;
-      }
-    }, 100);
+    addChatMsg('// listening…', 'system');
+    showFloatingNote('🎤 Listening…');
   };
 
   recog.onend = () => {
     console.log('[VOICE] Recognition ended');
-    currentRecognition = null;
-    if (listeningPower && isListening) {
+    recognition = null;
+
+    if (listeningEnabled && isListening && !isSpeaking) {
       if (restartTimer) clearTimeout(restartTimer);
       restartTimer = setTimeout(() => {
-        if (listeningPower && isListening && !currentRecognition) {
-          startListening();
-        }
         restartTimer = null;
-      }, 100);
+        if (listeningEnabled && !recognition && !isSpeaking) {
+          startRecognition();
+        }
+      }, 150);
     }
   };
 
   recog.onresult = async (event) => {
-    if (Date.now() < ignoreResultsUntil) {
+    if (Date.now() < ignoreUntil) {
       console.log('[VOICE] Cooldown – ignoring');
       return;
     }
@@ -268,128 +283,120 @@ async function startListening() {
       const transcript = result[0].transcript.trim();
       const confidence = result[0].confidence ?? 0.5;
 
-      if (isSpeaking && transcript.length > 1 && confidence > 0.5) {
-        if (!interruptionHandled) {
-          interruptionHandled = true;
-          console.log('[VOICE] Interrupting FRIDAY');
-          window.speechSynthesis.cancel();
-          isSpeaking = false;
-          fridaySpeechConfidence = 0;
-
-          // === POLITE INTERRUPTION FEEDBACK (no speech) ===
-          // 1. Floating note
-          showFloatingNote('🔄 Interrupted – listening');
-
-          // 2. Reactor blink (status dot flash)
-          blinkReactor();
-
-          // 3. Beep Sound 
-          /* if (beepSound) {
-             beepSound.currentTime = 0;
-            beepSound.play().catch(e => console.log('beep failed', e));
-          }*/
-
-          setTimeout(() => { interruptionHandled = false; }, 200);
+      if (!result.isFinal) {
+        // Interruption detection
+        if (isSpeaking && transcript.length > 2) {
+          const isNewPhrase = transcript !== lastInterimText;
+          if (isNewPhrase) {
+            if (interimStartTime === 0) interimStartTime = Date.now();
+            lastInterimText = transcript;
+          }
+          const sustainedMs = Date.now() - interimStartTime;
+          if (sustainedMs >= INTERRUPT_SUSTAIN_MS && confidence >= INTERRUPT_CONFIDENCE) {
+            console.log('[VOICE] Interruption confirmed after', sustainedMs, 'ms');
+            // Stop any playing audio
+            if (currentAudio) {
+              currentAudio.pause();
+              currentAudio = null;
+            }
+            isSpeaking = false;
+            ignoreUntil = Date.now() + POST_SPEECH_BUFFER_MS;
+            interimStartTime = 0;
+            lastInterimText = '';
+            addChatMsg('// Interrupted — listening.', 'system');
+            blinkReactor();
+            showFloatingNote('🔄 Interrupted — listening');
+          }
         }
-        return;
+        continue;
       }
 
-      if (result.isFinal) {
-        if (!transcript || transcript.length < 2) continue;
-        if (confidence < 0.3) continue;
+      // Final result – reset interruption tracking
+      interimStartTime = 0;
+      lastInterimText = '';
 
-        console.log(`[VOICE] Final: "${transcript}"`);
-        addChatMsg(transcript, 'user');
-        await processIntent(transcript);
+      if (!transcript || transcript.length < 2) continue;
+      if (confidence < 0.30) {
+        console.log('[VOICE] Low confidence final, discarding:', confidence);
+        continue;
       }
+
+      console.log(`[VOICE] Final (conf ${confidence.toFixed(2)}): "${transcript}"`);
+      await processTranscript(transcript);
     }
   };
 
   recog.onerror = (event) => {
     console.error('[VOICE] Error:', event.error);
     if (event.error === 'not-allowed') {
-      addChatMsg('// Microphone access blocked. Please reload and grant permission.', 'system');
+      addChatMsg('// Microphone blocked. Reload and grant permission.', 'system');
       isListening = false;
-      listeningPower = false;
+      listeningEnabled = false;
       updateUI(false);
-      currentRecognition = null;
+      recognition = null;
     } else if (event.error === 'network') {
-      if (currentRecognition) {
-        try { currentRecognition.abort(); } catch(e) {}
-        currentRecognition = null;
+      if (recognition) {
+        try { recognition.abort(); } catch {}
+        recognition = null;
       }
-      if (listeningPower && isListening) setTimeout(() => startListening(), 500);
+      if (listeningEnabled && isListening) setTimeout(() => startRecognition(), 600);
     }
   };
 
-  currentRecognition = recog;
+  recognition = recog;
   try {
     recog.start();
   } catch (err) {
-    console.error('[VOICE] Could not start:', err);
+    console.error('[VOICE] Could not start recognition:', err);
     addChatMsg('// Could not start microphone. Try again.', 'system');
-    currentRecognition = null;
-    if (listeningPower && isListening) setTimeout(() => startListening(), 500);
+    recognition = null;
+    if (listeningEnabled) setTimeout(() => startRecognition(), 800);
   }
 }
 
-function stopListening() {
+function stopRecognition() {
   if (restartTimer) clearTimeout(restartTimer);
-  if (confidenceDecayInterval) {
-    clearInterval(confidenceDecayInterval);
-    confidenceDecayInterval = null;
+  if (recognition) {
+    try { recognition.abort(); } catch {}
+    recognition = null;
   }
-  if (currentRecognition) {
-    try { currentRecognition.abort(); } catch(e) {}
-    currentRecognition = null;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
   }
-  if (isListening) {
-    isListening = false;
-    updateUI(false);
-    addChatMsg('// microphone off (manual)', 'system');
-  }
-  window.speechSynthesis.cancel();
+  isListening = false;
   isSpeaking = false;
-  interruptionHandled = false;
+  interimStartTime = 0;
+  lastInterimText = '';
+  ignoreUntil = 0;
+  updateUI(false);
+  addChatMsg('// Microphone off.', 'system');
 }
 
-function updateUI(listening) {
-  const btn = document.getElementById('btn-listen');
-  const dot = document.getElementById('status-dot');
-  const statusText = document.getElementById('status-text');
-  if (listening) {
-    if (btn) { btn.textContent = 'MIC: ON'; btn.classList.add('active'); }
-    if (dot) dot.classList.remove('off');
-    if (statusText) statusText.textContent = 'Listening';
-  } else {
-    if (btn) { btn.textContent = 'MIC: OFF'; btn.classList.remove('active'); }
-    if (dot) dot.classList.add('off');
-    if (statusText) statusText.textContent = 'Mic Off';
-  }
-}
+// ─── Public API ───────────────────────────────────────────────────────────
 
 export function toggleMicrophone() {
   if (isListening) {
-    listeningPower = false;
-    stopListening();
+    listeningEnabled = false;
+    stopRecognition();
   } else {
-    listeningPower = true;
-    startListening();
+    listeningEnabled = true;
+    startRecognition();
   }
 }
 
 export function setListeningPower(enabled) {
-  listeningPower = enabled;
-  if (enabled && !isListening) startListening();
-  else if (!enabled && isListening) stopListening();
+  listeningEnabled = enabled;
+  if (enabled && !isListening) startRecognition();
+  if (!enabled && isListening) stopRecognition();
 }
 
 export function getListeningPower() {
-  return listeningPower;
+  return listeningEnabled;
 }
 
 export function resumeListening() {
-  if (listeningPower && !isListening) startListening();
+  if (listeningEnabled && !isListening) startRecognition();
 }
 
 export function initVoice() {
@@ -398,8 +405,7 @@ export function initVoice() {
     micBtn.addEventListener('click', toggleMicrophone);
     micBtn._voiceHandler = true;
   }
-  window.speechSynthesis.getVoices();
-  listeningPower = false;
+  listeningEnabled = false;
   isListening = false;
   updateUI(false);
 }
