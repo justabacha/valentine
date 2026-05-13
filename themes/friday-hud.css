@@ -405,3 +405,11 @@ html, body {
 .spin-slow { animation: spin-cw  30s linear infinite; transform-origin: center; }
 .flicker   { animation: flicker 5s infinite; }
 
+@keyframes blink {
+  0% { opacity: 1; transform: scale(1); background: var(--cyan); }
+  50% { opacity: 0.3; transform: scale(1.3); background: white; }
+  100% { opacity: 1; transform: scale(1); background: var(--cyan); }
+}
+.status-dot.blink {
+  animation: blink 0.3s ease-out;
+}
