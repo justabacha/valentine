@@ -8,21 +8,31 @@ import { isGhostMode, isFocusMode, setFocusMode } from './modes.js';
 let currentRecognition = null;
 let isListening = false;
 let isSpeaking = false;
-let isFillerSpeaking = false;          // FIX 2: guards filler against self-interruption
+let isFillerSpeaking = false;
 let restartTimer = null;
 let lastSpeechTime = 0;
-let silenceThreshold = 1200;           // ms before accepting new user input after FRIDAY speaks
+let silenceThreshold = 1200;
 let listeningPower = true;
 let fridaySpeechConfidence = 0;
-let confidenceDecayInterval = null;    // store interval ID for cleanup
+let confidenceDecayInterval = null;
+let interruptionCooldown = false;
+let ignoreResultsUntil = 0;          // timestamp to ignore all recognition results (prevents self‑loop)
 
-// Strip ONLY emojis, keep letters, numbers, punctuation
+const fillers = [
+  "Yeah, go on...",
+  "Sorry, talk to me.",
+  "I'm listening.",
+  "Go ahead.",
+  "What's on your mind?",
+  "Tell me more.",
+  "Say that again.",
+  "You have the floor."
+];
+
 function stripEmojis(text) {
   return text.replace(/[\p{Emoji}\uD83C-\uDBFF\uDC00-\uDFFF]/gu, '').trim();
 }
 
-// Speak reply (respect Ghost Mode)
-// FIX 2: accepts optional isFiller flag so interruption logic ignores its own output
 function speak(text, isFiller = false) {
   if (isGhostMode()) return;
   if (!window.speechSynthesis) return;
@@ -36,34 +46,29 @@ function speak(text, isFiller = false) {
   fridaySpeechConfidence = 1.0;
   lastSpeechTime = Date.now();
 
+  // After speaking, ignore recognition results for 1 second to avoid self‑loop
+  ignoreResultsUntil = Date.now() + 1000;
+
   const utterance = new SpeechSynthesisUtterance(clean);
   utterance.rate = 0.95;
   utterance.pitch = 1.2;
   utterance.volume = 1.0;
 
-  // Select best voice
   const voices = window.speechSynthesis.getVoices();
   let preferred = null;
-
-  // Priority 1: Google voices (best quality)
   preferred = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en'));
-  // Priority 2: macOS natural voices
   if (!preferred) preferred = voices.find(v => v.name.includes('Samantha') && v.lang.startsWith('en'));
   if (!preferred) preferred = voices.find(v => v.name.includes('Victoria') && v.lang.startsWith('en'));
   if (!preferred) preferred = voices.find(v => v.name.includes('Karen') && v.lang.startsWith('en'));
-  // Priority 3: Microsoft voices (Windows)
   if (!preferred) preferred = voices.find(v => v.name.includes('Microsoft') && v.lang.startsWith('en'));
-  // Priority 4: Any en-GB or en-US voice
   if (!preferred) preferred = voices.find(v => v.lang === 'en-GB');
   if (!preferred) preferred = voices.find(v => v.lang === 'en-US');
-  // Fallback: first available
   if (!preferred && voices.length > 0) preferred = voices[0];
-
   if (preferred) utterance.voice = preferred;
 
   utterance.onend = () => {
     isSpeaking = false;
-    isFillerSpeaking = false;          // FIX 2: clear filler flag when done
+    isFillerSpeaking = false;
     fridaySpeechConfidence = 0.8;
     lastSpeechTime = Date.now();
     if (listeningPower && isListening && !currentRecognition) {
@@ -72,15 +77,13 @@ function speak(text, isFiller = false) {
   };
   utterance.onerror = () => {
     isSpeaking = false;
-    isFillerSpeaking = false;          // FIX 2: clear on error too
+    isFillerSpeaking = false;
     fridaySpeechConfidence = 0;
   };
 
   window.speechSynthesis.speak(utterance);
 }
 
-// FIX 3: Removed isLikelyFridaySpeaking() block from processIntent.
-// This helper is kept only for the onresult self-detection guard used in FIX 2.
 function isLikelyFridaySpeaking() {
   if (isSpeaking) return true;
   const timeSince = Date.now() - lastSpeechTime;
@@ -90,7 +93,6 @@ function isLikelyFridaySpeaking() {
   return false;
 }
 
-// Intent handler
 async function handleHUDIntent(transcript) {
   const lower = transcript.toLowerCase();
   let reply = "";
@@ -144,29 +146,23 @@ async function handleHUDIntent(transcript) {
   }
 }
 
-// FIX 3: Removed the isLikelyFridaySpeaking() early-return guard.
-// FRIDAY now processes intent even while she's talking — the Polite Pivot in
-// onresult handles the graceful transition before we ever reach here.
 async function processIntent(transcript) {
   if (!isListening) return;
 
   const lower = transcript.toLowerCase();
-  // Allow focus mode commands to bypass the focus lock
   if (lower.includes('focus mode on') || lower.includes('focus mode off')) {
     await handleHUDIntent(transcript);
     return;
   }
 
   if (isFocusMode()) {
-    console.log('[VOICE] Focus mode active – ignoring non-toggle command');
+    console.log('[VOICE] Focus mode active – ignoring non‑toggle command');
     return;
   }
 
   await handleHUDIntent(transcript);
-  // Continue listening – no auto-stop
 }
 
-// Create recognition instance (continuous)
 function createRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
@@ -175,13 +171,12 @@ function createRecognition() {
   }
   const recog = new SpeechRecognition();
   recog.continuous = true;
-  recog.interimResults = true;         // FIX 1: real-time partial transcripts enabled
+  recog.interimResults = true;
   recog.lang = 'en-US';
   recog.maxAlternatives = 1;
   return recog;
 }
 
-// Request microphone permission once
 async function requestMicrophonePermission() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     addChatMsg('// Microphone not supported', 'system');
@@ -198,7 +193,6 @@ async function requestMicrophonePermission() {
   }
 }
 
-// Start continuous listening with listening power
 async function startListening() {
   if (!listeningPower) {
     console.log('[VOICE] Listening power is OFF');
@@ -211,13 +205,11 @@ async function startListening() {
     return;
   }
 
-  // Clean up existing recognition
   if (currentRecognition) {
     try { currentRecognition.abort(); } catch(e) {}
     currentRecognition = null;
   }
 
-  // Stop any previous confidence decay interval
   if (confidenceDecayInterval) {
     clearInterval(confidenceDecayInterval);
     confidenceDecayInterval = null;
@@ -229,15 +221,12 @@ async function startListening() {
   recog.onstart = () => {
     isListening = true;
     updateUI(true);
-    console.log('[VOICE] Recognition started - listening');
+    console.log('[VOICE] Recognition started');
     addChatMsg('// listening continuously...', 'system');
     showFloatingNote('🎤 Listening...');
 
-    // Gradual confidence decay while listening
     confidenceDecayInterval = setInterval(() => {
-      if (fridaySpeechConfidence > 0) {
-        fridaySpeechConfidence -= 0.05;
-      }
+      if (fridaySpeechConfidence > 0) fridaySpeechConfidence -= 0.05;
       if (!isListening) {
         clearInterval(confidenceDecayInterval);
         confidenceDecayInterval = null;
@@ -246,11 +235,11 @@ async function startListening() {
   };
 
   recog.onend = () => {
-    console.log('[VOICE] Recognition ended - checking restart');
+    console.log('[VOICE] Recognition ended');
     currentRecognition = null;
     if (listeningPower && isListening) {
       if (restartTimer) clearTimeout(restartTimer);
-      restartTimer = setTimeout(() => {                  // FIX 4: 300ms → 100ms
+      restartTimer = setTimeout(() => {
         if (listeningPower && isListening && !currentRecognition) {
           console.log('[VOICE] Restarting recognition');
           startListening();
@@ -261,42 +250,37 @@ async function startListening() {
   };
 
   recog.onresult = async (event) => {
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const transcript = event.results[i][0].transcript.trim();
+    // IGNORE ALL RESULTS DURING COOLDOWN (prevents self‑loop)
+    if (Date.now() < ignoreResultsUntil) {
+      console.log('[VOICE] Ignoring results (cooldown)');
+      return;
+    }
 
-      // FIX 2: Polite Pivot — if FRIDAY is mid-speech and user speaks (interim or final),
-      // cancel her output and acknowledge naturally. Guard against the filler triggering itself.
-      if (isSpeaking && !isFillerSpeaking && transcript.length > 1) {
-        console.log('[VOICE] Interruption detected — pivoting politely');
+    if (interruptionCooldown) return;
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const result = event.results[i];
+      const transcript = result[0].transcript.trim();
+      const confidence = result[0].confidence ?? 0.5;
+
+      // Polite Pivot: interrupt FRIDAY if user speaks with confidence > 0.5
+      if (isSpeaking && !isFillerSpeaking && transcript.length > 1 && confidence > 0.5) {
+        console.log('[VOICE] Interruption detected – pivoting politely');
         window.speechSynthesis.cancel();
         isSpeaking = false;
         fridaySpeechConfidence = 0;
+        interruptionCooldown = true;
+        setTimeout(() => { interruptionCooldown = false; }, 200);
 
-        const fillers = [
-          "Yeah, go on...",
-          "Sorry, talk to me.",
-          "I'm listening.",
-          "Go ahead.",
-        ];
         const filler = fillers[Math.floor(Math.random() * fillers.length)];
         addChatMsg(filler, 'friday');
-        speak(filler, true);           // isFiller = true — won't re-trigger this block
-        return;                        // skip further processing this cycle
+        speak(filler, true);
+        return;
       }
 
-      // Only process final results for intent routing
-      if (event.results[i].isFinal) {
-        const confidence = event.results[i][0].confidence ?? 0.5;
-
-        if (!transcript || transcript.length < 2) {
-          console.log('[VOICE] Skipping empty/short transcript');
-          continue;
-        }
-
-        if (confidence < 0.3) {
-          console.log(`[VOICE] Ignoring low confidence (${confidence}): "${transcript}"`);
-          continue;
-        }
+      if (result.isFinal) {
+        if (!transcript || transcript.length < 2) continue;
+        if (confidence < 0.3) continue;
 
         console.log(`[VOICE] Final transcript (conf: ${confidence}): "${transcript}"`);
         addChatMsg(transcript, 'user');
@@ -314,24 +298,20 @@ async function startListening() {
       updateUI(false);
       currentRecognition = null;
     } else if (event.error === 'no-speech') {
-      // continue listening
+      // continue
     } else if (event.error === 'network') {
       if (currentRecognition) {
         try { currentRecognition.abort(); } catch(e) {}
         currentRecognition = null;
       }
-      if (listeningPower && isListening) {
-        setTimeout(() => startListening(), 500);
-      }
+      if (listeningPower && isListening) setTimeout(() => startListening(), 500);
     } else {
       addChatMsg(`// Speech error: ${event.error}`, 'system');
       if (currentRecognition) {
         try { currentRecognition.abort(); } catch(e) {}
         currentRecognition = null;
       }
-      if (listeningPower && isListening) {
-        setTimeout(() => startListening(), 500);
-      }
+      if (listeningPower && isListening) setTimeout(() => startListening(), 500);
     }
   };
 
@@ -342,9 +322,7 @@ async function startListening() {
     console.error('[VOICE] Could not start microphone:', err);
     addChatMsg('// Could not start microphone. Try again.', 'system');
     currentRecognition = null;
-    if (listeningPower && isListening) {
-      setTimeout(() => startListening(), 500);
-    }
+    if (listeningPower && isListening) setTimeout(() => startListening(), 500);
   }
 }
 
@@ -365,7 +343,8 @@ function stopListening() {
   }
   window.speechSynthesis.cancel();
   isSpeaking = false;
-  isFillerSpeaking = false;            // FIX 2: clean up on full stop
+  isFillerSpeaking = false;
+  interruptionCooldown = false;
 }
 
 function updateUI(listening) {
@@ -414,7 +393,7 @@ export function initVoice() {
     micBtn.addEventListener('click', toggleMicrophone);
     micBtn._voiceHandler = true;
   }
-  window.speechSynthesis.getVoices(); // preload
+  window.speechSynthesis.getVoices();
   listeningPower = false;
   isListening = false;
   updateUI(false);
