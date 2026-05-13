@@ -34,7 +34,7 @@ function blinkReactor() {
   }, 300);
 }
 
-function speak(text) {
+/*function speak(text) {
   if (isGhostMode()) return;
   if (!window.speechSynthesis) return;
 
@@ -78,6 +78,24 @@ function speak(text) {
   };
 
   window.speechSynthesis.speak(utterance);
+}*/
+//=====kokoro tts_test=====
+async function speak(text) {
+  if (isGhostMode()) return;
+  try {
+    const response = await fetch('/api/kokoro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (!response.ok) throw new Error('TTS failed');
+    const audioBlob = await response.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    // ... (playback logic, onended cleanup, etc.)
+  } catch (err) {
+    fallbackToWebSpeech(text);
+  }
 }
 
 function isLikelyFridaySpeaking() {
