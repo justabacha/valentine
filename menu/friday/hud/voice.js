@@ -47,12 +47,12 @@ function speak(text) {
   let preferred = null;
   
   // Priority 1: Google voices (best quality across platforms)
-  preferred = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en'));
+  //preferred = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en'));
   
   // Priority 2: Natural-sounding system voices
-  if (!preferred) {
+  //if (!preferred) {
     preferred = voices.find(v => v.name.includes('Samantha') && v.lang.startsWith('en'));
-  }
+  //}
   if (!preferred) {
     preferred = voices.find(v => v.name.includes('Victoria') && v.lang.startsWith('en'));
   }
