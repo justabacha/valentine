@@ -14,8 +14,35 @@ let silenceThreshold = 1200;
 let listeningPower = true;
 let fridaySpeechConfidence = 0;
 let confidenceDecayInterval = null;
-let ignoreResultsUntil = 0;          // timestamp to ignore all recognition results
-let interruptionHandled = false;     // prevent multiple interruptions for same utterance
+let ignoreResultsUntil = 0;
+let interruptionHandled = false;
+
+// Simple beep using Web Audio (optional, silent if fails)
+function playBeep() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    oscillator.connect(gain);
+    gain.connect(audioCtx.destination);
+    oscillator.frequency.value = 880;
+    gain.gain.value = 0.2;
+    oscillator.type = 'sine';
+    oscillator.start();
+    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+    oscillator.stop(audioCtx.currentTime + 0.3);
+    // Resume audio context if suspended (browser policy)
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch(e) { console.warn('Beep failed', e); }
+}
+
+// Flash the status dot (add/remove a class)
+function blinkStatusDot() {
+  const dot = document.getElementById('status-dot');
+  if (!dot) return;
+  dot.classList.add('blink-fast');
+  setTimeout(() => dot.classList.remove('blink-fast'), 300);
+}
 
 function stripEmojis(text) {
   return text.replace(/[\p{Emoji}\uD83C-\uDBFF\uDC00-\uDFFF]/gu, '').trim();
@@ -32,7 +59,7 @@ function speak(text) {
   isSpeaking = true;
   fridaySpeechConfidence = 1.0;
   lastSpeechTime = Date.now();
-  ignoreResultsUntil = Date.now() + 1500; // 1.5s cooldown after speaking
+  ignoreResultsUntil = Date.now() + 1500;
 
   const utterance = new SpeechSynthesisUtterance(clean);
   utterance.rate = 0.95;
@@ -122,7 +149,7 @@ async function handleHUDIntent(transcript) {
     return true;
   }
   else {
-    // generic fallback – no need to speak "I'm here" every time, just listen
+    // generic fallback – do not speak
     return false;
   }
 }
@@ -227,7 +254,6 @@ async function startListening() {
   };
 
   recog.onresult = async (event) => {
-    // Cooldown: ignore results for 1.5s after FRIDAY speaks
     if (Date.now() < ignoreResultsUntil) {
       console.log('[VOICE] Cooldown – ignoring');
       return;
@@ -246,11 +272,15 @@ async function startListening() {
           window.speechSynthesis.cancel();
           isSpeaking = false;
           fridaySpeechConfidence = 0;
-          // We do NOT speak any filler – just cancel and continue listening
+          
+          // Provide non‑speech feedback: floating note + beep + blink
+          showFloatingNote('🫡 I\'m listening – go ahead');
+          playBeep();
+          blinkStatusDot();
+          
           setTimeout(() => { interruptionHandled = false; }, 200);
         }
         // After interruption, ignore the interrupting transcript (don't process it as a command)
-        // The user will speak again.
         return;
       }
 
