@@ -8,32 +8,20 @@ import { isGhostMode, isFocusMode, setFocusMode } from './modes.js';
 let currentRecognition = null;
 let isListening = false;
 let isSpeaking = false;
-let isFillerSpeaking = false;
 let restartTimer = null;
 let lastSpeechTime = 0;
 let silenceThreshold = 1200;
 let listeningPower = true;
 let fridaySpeechConfidence = 0;
 let confidenceDecayInterval = null;
-let interruptionCooldown = false;
-let ignoreResultsUntil = 0;          // timestamp to ignore all recognition results (prevents self‑loop)
-
-const fillers = [
-  "Yeah, go on...",
-  "Sorry, talk to me.",
-  "I'm listening.",
-  "Go ahead.",
-  "What's on your mind?",
-  "Tell me more.",
-  "Say that again.",
-  "You have the floor."
-];
+let ignoreResultsUntil = 0;          // timestamp to ignore all recognition results
+let interruptionHandled = false;     // prevent multiple interruptions for same utterance
 
 function stripEmojis(text) {
   return text.replace(/[\p{Emoji}\uD83C-\uDBFF\uDC00-\uDFFF]/gu, '').trim();
 }
 
-function speak(text, isFiller = false) {
+function speak(text) {
   if (isGhostMode()) return;
   if (!window.speechSynthesis) return;
 
@@ -42,12 +30,9 @@ function speak(text, isFiller = false) {
 
   window.speechSynthesis.cancel();
   isSpeaking = true;
-  if (isFiller) isFillerSpeaking = true;
   fridaySpeechConfidence = 1.0;
   lastSpeechTime = Date.now();
-
-  // After speaking, ignore recognition results for 1 second to avoid self‑loop
-  ignoreResultsUntil = Date.now() + 1000;
+  ignoreResultsUntil = Date.now() + 1500; // 1.5s cooldown after speaking
 
   const utterance = new SpeechSynthesisUtterance(clean);
   utterance.rate = 0.95;
@@ -68,7 +53,6 @@ function speak(text, isFiller = false) {
 
   utterance.onend = () => {
     isSpeaking = false;
-    isFillerSpeaking = false;
     fridaySpeechConfidence = 0.8;
     lastSpeechTime = Date.now();
     if (listeningPower && isListening && !currentRecognition) {
@@ -77,7 +61,6 @@ function speak(text, isFiller = false) {
   };
   utterance.onerror = () => {
     isSpeaking = false;
-    isFillerSpeaking = false;
     fridaySpeechConfidence = 0;
   };
 
@@ -100,7 +83,7 @@ async function handleHUDIntent(transcript) {
   if (lower.includes('weather') || lower.includes('temperature')) {
     const weather = await fetchWeatherData();
     reply = `Weather update: ${weather.temp} degrees Celsius, ${weather.condition}`;
-    addChatMsg(`${reply}`, 'friday');
+    addChatMsg(reply, 'friday');
     speak(reply);
     return true;
   }
@@ -139,9 +122,7 @@ async function handleHUDIntent(transcript) {
     return true;
   }
   else {
-    reply = "I'm here. Just speak naturally.";
-    addChatMsg(reply, 'friday');
-    speak(reply);
+    // generic fallback – no need to speak "I'm here" every time, just listen
     return false;
   }
 }
@@ -194,10 +175,7 @@ async function requestMicrophonePermission() {
 }
 
 async function startListening() {
-  if (!listeningPower) {
-    console.log('[VOICE] Listening power is OFF');
-    return;
-  }
+  if (!listeningPower) return;
 
   const hasPermission = await requestMicrophonePermission();
   if (!hasPermission) {
@@ -241,7 +219,6 @@ async function startListening() {
       if (restartTimer) clearTimeout(restartTimer);
       restartTimer = setTimeout(() => {
         if (listeningPower && isListening && !currentRecognition) {
-          console.log('[VOICE] Restarting recognition');
           startListening();
         }
         restartTimer = null;
@@ -250,31 +227,30 @@ async function startListening() {
   };
 
   recog.onresult = async (event) => {
-    // IGNORE ALL RESULTS DURING COOLDOWN (prevents self‑loop)
+    // Cooldown: ignore results for 1.5s after FRIDAY speaks
     if (Date.now() < ignoreResultsUntil) {
-      console.log('[VOICE] Ignoring results (cooldown)');
+      console.log('[VOICE] Cooldown – ignoring');
       return;
     }
-
-    if (interruptionCooldown) return;
 
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const result = event.results[i];
       const transcript = result[0].transcript.trim();
       const confidence = result[0].confidence ?? 0.5;
 
-      // Polite Pivot: interrupt FRIDAY if user speaks with confidence > 0.5
-      if (isSpeaking && !isFillerSpeaking && transcript.length > 1 && confidence > 0.5) {
-        console.log('[VOICE] Interruption detected – pivoting politely');
-        window.speechSynthesis.cancel();
-        isSpeaking = false;
-        fridaySpeechConfidence = 0;
-        interruptionCooldown = true;
-        setTimeout(() => { interruptionCooldown = false; }, 200);
-
-        const filler = fillers[Math.floor(Math.random() * fillers.length)];
-        addChatMsg(filler, 'friday');
-        speak(filler, true);
+      // Interrupt FRIDAY if she is speaking and user says something with confidence
+      if (isSpeaking && transcript.length > 1 && confidence > 0.5) {
+        if (!interruptionHandled) {
+          interruptionHandled = true;
+          console.log('[VOICE] Interrupting FRIDAY');
+          window.speechSynthesis.cancel();
+          isSpeaking = false;
+          fridaySpeechConfidence = 0;
+          // We do NOT speak any filler – just cancel and continue listening
+          setTimeout(() => { interruptionHandled = false; }, 200);
+        }
+        // After interruption, ignore the interrupting transcript (don't process it as a command)
+        // The user will speak again.
         return;
       }
 
@@ -282,7 +258,7 @@ async function startListening() {
         if (!transcript || transcript.length < 2) continue;
         if (confidence < 0.3) continue;
 
-        console.log(`[VOICE] Final transcript (conf: ${confidence}): "${transcript}"`);
+        console.log(`[VOICE] Final: "${transcript}"`);
         addChatMsg(transcript, 'user');
         await processIntent(transcript);
       }
@@ -290,23 +266,14 @@ async function startListening() {
   };
 
   recog.onerror = (event) => {
-    console.error('[VOICE] Speech error:', event.error);
+    console.error('[VOICE] Error:', event.error);
     if (event.error === 'not-allowed') {
       addChatMsg('// Microphone access blocked. Please reload and grant permission.', 'system');
       isListening = false;
       listeningPower = false;
       updateUI(false);
       currentRecognition = null;
-    } else if (event.error === 'no-speech') {
-      // continue
     } else if (event.error === 'network') {
-      if (currentRecognition) {
-        try { currentRecognition.abort(); } catch(e) {}
-        currentRecognition = null;
-      }
-      if (listeningPower && isListening) setTimeout(() => startListening(), 500);
-    } else {
-      addChatMsg(`// Speech error: ${event.error}`, 'system');
       if (currentRecognition) {
         try { currentRecognition.abort(); } catch(e) {}
         currentRecognition = null;
@@ -319,7 +286,7 @@ async function startListening() {
   try {
     recog.start();
   } catch (err) {
-    console.error('[VOICE] Could not start microphone:', err);
+    console.error('[VOICE] Could not start:', err);
     addChatMsg('// Could not start microphone. Try again.', 'system');
     currentRecognition = null;
     if (listeningPower && isListening) setTimeout(() => startListening(), 500);
@@ -343,15 +310,13 @@ function stopListening() {
   }
   window.speechSynthesis.cancel();
   isSpeaking = false;
-  isFillerSpeaking = false;
-  interruptionCooldown = false;
+  interruptionHandled = false;
 }
 
 function updateUI(listening) {
   const btn = document.getElementById('btn-listen');
   const dot = document.getElementById('status-dot');
   const statusText = document.getElementById('status-text');
-
   if (listening) {
     if (btn) { btn.textContent = 'MIC: ON'; btn.classList.add('active'); }
     if (dot) dot.classList.remove('off');
