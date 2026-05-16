@@ -9,13 +9,11 @@ const PAGE_SIZE = 30;
 let isLoadingMore = false;
 let hasMoreMessages = true;
 let scrollTriggerEnabled = true;
-let initialLoadResolve = null;  // used to signal when initial load is done
 
 export async function initializeChat() {
     initTextareaEngine();
     window.sendMessageFromEngine = sendMessage;
     setupScrollListener();
-    // Wait for initial history load
     await loadChatHistory();
     console.log("Chat systems initialized & bridged ✨");
 }
@@ -44,6 +42,7 @@ async function loadOlderMessages() {
         .select('*')
         .eq('owner_id', state.userProfile.id)
         .order('created_at', { ascending: false })
+        .order('id', { ascending: false })   // tie‑breaker for stable ordering
         .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
     if (error) {
@@ -60,7 +59,7 @@ async function loadOlderMessages() {
         return;
     }
 
-    const messages = data.reverse();
+    const messages = data.reverse(); // oldest first for prepending
     const typingDiv = document.getElementById('typingDots');
     for (const msg of messages) {
         const isUser = msg.sender === 'user';
@@ -70,6 +69,7 @@ async function loadOlderMessages() {
     currentOffset += data.length;
     if (data.length < PAGE_SIZE) hasMoreMessages = false;
 
+    // Restore scroll position
     const newScrollHeight = chatArea.scrollHeight;
     chatArea.scrollTop = oldScrollTop + (newScrollHeight - oldScrollHeight);
     isLoadingMore = false;
@@ -84,6 +84,7 @@ async function loadChatHistory() {
     const chatArea = document.getElementById('chatArea');
     const typingDiv = document.getElementById('typingDots');
     if (chatArea && typingDiv) {
+        // Clear all messages except the typing indicator
         while (chatArea.firstChild !== typingDiv) {
             chatArea.removeChild(chatArea.firstChild);
         }
@@ -94,6 +95,7 @@ async function loadChatHistory() {
         .select('*')
         .eq('owner_id', state.userProfile.id)
         .order('created_at', { ascending: false })
+        .order('id', { ascending: false })   // stable order
         .range(0, PAGE_SIZE - 1);
 
     if (error) {
@@ -108,13 +110,16 @@ async function loadChatHistory() {
         return;
     }
 
-    const messages = data.reverse();
+    const messages = data.reverse(); // now oldest first (top to bottom)
     for (const msg of messages) {
         const isUser = msg.sender === 'user';
         appendMessage(isUser ? 'You' : 'FRIDAY', msg.message, isUser, true);
     }
     currentOffset = data.length;
     if (data.length < PAGE_SIZE) hasMoreMessages = false;
+
+    // 🎯 SCROLL TO BOTTOM – ensures latest message is visible
+    scrollToBottom();
 }
 
 function showWelcomeMessage() {
@@ -183,7 +188,17 @@ export function appendMessage(sender, text, isUser = false, dontSave = false) {
     if (!chatArea || !typingDiv) return;
     const msgDiv = createMessageElement(sender, text, isUser);
     chatArea.insertBefore(msgDiv, typingDiv);
-    chatArea.scrollTop = chatArea.scrollHeight;
+    scrollToBottom(); // ensures new messages are visible
+}
+
+function scrollToBottom() {
+    const chatArea = document.getElementById('chatArea');
+    if (chatArea) {
+        // Use requestAnimationFrame to wait for DOM updates
+        requestAnimationFrame(() => {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        });
+    }
 }
 
 function createMessageElement(sender, text, isUser) {
