@@ -40,6 +40,7 @@ export default async function handler(req, res) {
 
     const fullMessages = [
       { role: 'system', content: fridayDNA },
+      { role: 'system', content: `You are currently talking to ${userName}${userNickname ? ` (also known as ${userNickname})` : ''}. Remember your rules: respond as a close friend, keep it English-first with natural blends, and default to short, punchy 1-2 sentence replies.` },
       ...messages
     ];
 
