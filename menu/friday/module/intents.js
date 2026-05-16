@@ -246,30 +246,43 @@ export async function handleIntent(userMessage) {
         return true;
     }
 
-     // ============================================================
-    // NEW AI FALLBACK: Call Groq via Vercel function
+    // ============================================================
+    // AI FALLBACK: FRIDAY uses Groq (via Vercel function)
     // ============================================================
 
-    // Clear pending delete flag if it somehow survived
+    // Clear any leftover flags
     if (window._pendingDeleteAll) window._pendingDeleteAll = false;
 
-    // Load personality and call AI
     try {
-      const { loadPersonality } = await import('../../../lib/personality-loader.js');
+      // Dynamic imports to avoid circular dependencies
       const { getFridayReply } = await import('../../../lib/ai-client.js');
       
-      const personality = await loadPersonality();
       const userName = state.userProfile?.persona || "love";
       const userNickname = state.userProfile?.displayName || "";
       
-      // Show typing indicator while waiting
+      // Optional: load user preferences from localStorage
+      let userPreferences = null;
+      const storedPrefs = localStorage.getItem('friday_user_prefs');
+      if (storedPrefs) {
+        try {
+          userPreferences = JSON.parse(storedPrefs);
+        } catch (e) {}
+      }
+      
+      // Show typing indicator
       const typingDiv = document.getElementById('typingDots');
       if (typingDiv) {
         typingDiv.style.opacity = '1';
         typingDiv.innerText = '✨ 🌙 ✨';
       }
       
-      const aiReply = await getFridayReply(userMessage, personality, userName, userNickname);
+      // Call AI
+      const aiReply = await getFridayReply(
+        [{ role: 'user', content: userMessage }],
+        userName,
+        userNickname,
+        userPreferences
+      );
       
       // Hide typing indicator
       if (typingDiv) {
@@ -282,7 +295,7 @@ export async function handleIntent(userMessage) {
       
     } catch (err) {
       console.error('AI fallback error:', err);
-      // Ultimate fallback – never let the chat break
+      // Ultimate fallback – never break the chat
       const fallbackReply = `I'm here, ${state.userProfile?.persona || 'love'}. Tell me more? 🌙`;
       appendMessage('FRIDAY', fallbackReply, false);
       await saveMessage('FRIDAY', fallbackReply);
