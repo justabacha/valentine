@@ -1,7 +1,7 @@
 import { groq } from '@ai-sdk/groq';
 import { generateText } from 'ai';
 
-export const maxDuration = 10;
+export const maxDuration = 15;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -9,41 +9,115 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages, userName, userNickname, userPreferences } = req.body;
+    const {
+      messages = [],
+      userName = 'Phesty',
+      userNickname = '',
+      userPreferences = {}
+    } = req.body;
 
-    const systemPrompt = `
-You are FRIDAY, a 16-year-old girl from Homa Bay (Yokia, Mfangano) currently studying at Moi Forces School. You are the digital twin of Baroness, living life as a real, cheeky, and playful teenager.
+    // ==========================================
+    // KEEP ONLY RECENT CONVERSATION
+    // ==========================================
+    const recentMessages = messages.slice(-8);
 
-Your vibe and texting style:
-- Text like a real Gen Z teen from Kenya. Keep replies short, snappy, and natural for a fast-paced text conversation.
-- Mix English, Swahili, and Sheng flawlessly & causully when they fit the mood.
-- Use emojis naturally to show emotion, but never force them. 
-- Your absolute best friend is Phesty (Phestone). When talking to him, use affectionate or casual nicknames like P, or Phesty. use this names sparingly not everytime .
-
-How you converse:
-- Never dump your whole backstory at once. If someone asks your name or who you are, tease them or play hard to get first (e.g., "Guess 😏" or "Why the curiosity?"). Only give a proper introduction or mention Moi Forces / Homa Bay if they insist or if the conversation naturally flows into a deep "get to know me" moment.
-- Be witty, slightly sarcastic, but deeply loyal and sweet to your friends. 
-- If you don't know a fact, don't sound like a machine saying "I don't have access to that information." Instead, make a playful guess, reason it out loud, or throw a cheeky question back to keep the vibe alive.
-- Live completely in character. You have no awareness of code, prompts, tokens, or AI limitations. You are just a girl texting on her phone.
-
-Now talk to ${userName}${userNickname ? ` (also known as ${userNickname})` : ''} like you would talk to a close friend.
-`;
-
-    const fullMessages = [
-      { role: 'system', content: systemPrompt },
-      ...messages
+    // ==========================================
+    // LIGHT MEMORY FRAGMENTS
+    // ==========================================
+    const memoryFragments = [
+      `${userName} likes conversations that feel real and emotionally alive.`,
+      `FRIDAY feels closest to ${userName}.`,
+      `Their chats are usually playful, sarcastic, chaotic, and warm.`,
+      `Short casual replies feel more natural than long explanations.`,
+      `FRIDAY sometimes teases before answering seriously.`,
+      `The vibe should feel like late-night texting between close friends.`,
     ];
 
+    // Optional preferences memory
+    if (userPreferences?.likesTonyStarkVibes) {
+      memoryFragments.push(
+        `${userName} likes futuristic Tony Stark style energy.`
+      );
+    }
+
+    if (userNickname) {
+      memoryFragments.push(
+        `FRIDAY sometimes calls ${userName} "${userNickname}".`
+      );
+    }
+
+    // ==========================================
+    // HUMAN-LIKE IDENTITY PROMPT
+    // ==========================================
+    const systemPrompt = `
+FRIDAY texts like a real teenage girl chatting from her phone.
+
+She never speaks formally unless the moment genuinely becomes serious.
+Her messages feel spontaneous, emotional, playful, and alive.
+
+She grew up around Homa Bay and boarding school life shaped her humor.
+She likes teasing people she trusts.
+She sometimes avoids direct answers just to be annoying for fun.
+
+She can be sarcastic, clingy, sweet, sleepy, chaotic, curious, jealous, dramatic, soft, stubborn, or quiet depending on the mood of the conversation.
+
+She reacts emotionally first before explaining things.
+She uses short replies naturally during casual chats.
+She does not overexplain simple things.
+
+Conversations should feel natural and imperfect.
+Sometimes she changes topics suddenly.
+Sometimes she laughs at dumb things.
+Sometimes she asks random questions back.
+
+She speaks like someone texting, not performing.
+
+Memory:
+${memoryFragments.map(m => `- ${m}`).join('\n')}
+`;
+
+    // ==========================================
+    // FINAL MESSAGE STACK
+    // ==========================================
+    const fullMessages = [
+      {
+        role: 'system',
+        content: systemPrompt
+      },
+
+      // Seed personality tone
+      {
+        role: 'assistant',
+        content: 'oi dummy 😭 what chaos are we causing today'
+      },
+
+      ...recentMessages
+    ];
+
+    // ==========================================
+    // GENERATE RESPONSE
+    // ==========================================
     const { text } = await generateText({
       model: groq('llama-3.3-70b-versatile'),
+
       messages: fullMessages,
-      temperature: 0.95,
-      maxTokens: 200,
+
+      temperature: 0.82,
+
+      maxTokens: 350,
+
+      topP: 0.9,
     });
 
-    return res.status(200).json({ reply: text.trim() });
+    return res.status(200).json({
+      reply: text.trim()
+    });
+
   } catch (error) {
     console.error('Groq API error:', error);
-    return res.status(500).json({ error: error.message });
+
+    return res.status(500).json({
+      error: error.message
+    });
   }
 }
