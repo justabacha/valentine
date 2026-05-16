@@ -246,7 +246,46 @@ export async function handleIntent(userMessage) {
         return true;
     }
 
-    // ---------- no intent matched ----------
+     // ============================================================
+    // NEW AI FALLBACK: Call Groq via Vercel function
+    // ============================================================
+
+    // Clear pending delete flag if it somehow survived
     if (window._pendingDeleteAll) window._pendingDeleteAll = false;
-    return false;
+
+    // Load personality and call AI
+    try {
+      const { loadPersonality } = await import('../../../lib/personality-loader.js');
+      const { getFridayReply } = await import('../../../lib/ai-client.js');
+      
+      const personality = await loadPersonality();
+      const userName = state.userProfile?.persona || "love";
+      const userNickname = state.userProfile?.displayName || "";
+      
+      // Show typing indicator while waiting
+      const typingDiv = document.getElementById('typingDots');
+      if (typingDiv) {
+        typingDiv.style.opacity = '1';
+        typingDiv.innerText = '✨ 🌙 ✨';
+      }
+      
+      const aiReply = await getFridayReply(userMessage, personality, userName, userNickname);
+      
+      // Hide typing indicator
+      if (typingDiv) {
+        typingDiv.innerText = '✨ ✨ ✨';
+      }
+      
+      appendMessage('FRIDAY', aiReply, false);
+      await saveMessage('FRIDAY', aiReply);
+      return true;
+      
+    } catch (err) {
+      console.error('AI fallback error:', err);
+      // Ultimate fallback – never let the chat break
+      const fallbackReply = `I'm here, ${state.userProfile?.persona || 'love'}. Tell me more? 🌙`;
+      appendMessage('FRIDAY', fallbackReply, false);
+      await saveMessage('FRIDAY', fallbackReply);
+      return true;
+    }
 }
